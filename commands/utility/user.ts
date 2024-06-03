@@ -1,10 +1,22 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder, CommandInteraction, GuildMember } from 'discord.js';
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('user')
 		.setDescription('Provides information about the user.'),
-	async execute(interaction: { reply: (arg0: string) => any; user: { username: any; }; member: { joinedAt: any; }; }) {
-		await interaction.reply(`This command was run by ${interaction.user.username}, who joined on ${interaction.member.joinedAt}.`);
+	async execute(interaction: CommandInteraction) {
+		if (!interaction.guild) {
+			await interaction.reply("This command can only be used in a server.");
+			return;
+		}
+		if (!interaction.member || !(interaction.member instanceof GuildMember)) {
+			await interaction.reply("This command can only be done by a member.");
+			return;
+		}
+
+		const member = interaction.member;
+		const joinedAt = member.joinedAt ? member.joinedAt.toDateString() : "an unknown date";
+
+		await interaction.reply(`This command was run by ${interaction.user.username}, who joined on ${joinedAt}.`);
 	},
 };
