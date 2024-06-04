@@ -1,10 +1,10 @@
 import { SlashCommandBuilder, CommandInteraction, GuildMember } from 'discord.js';
 
-module.exports = {
-	data: new SlashCommandBuilder()
+export const data = new SlashCommandBuilder()
 		.setName('user')
-		.setDescription('Provides information about the user.'),
-	async execute(interaction: CommandInteraction) {
+		.setDescription('Provides information about the user.');
+
+export async function execute(interaction: CommandInteraction) {
 		if (!interaction.guild) {
 			await interaction.reply("This command can only be used in a server.");
 			return;
@@ -18,5 +18,4 @@ module.exports = {
 		const joinedAt = member.joinedAt ? member.joinedAt.toDateString() : "an unknown date";
 
 		await interaction.reply(`This command was run by ${interaction.user.username}, who joined on ${joinedAt}.`);
-	},
-};
+}
