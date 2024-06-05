@@ -1,16 +1,24 @@
-const fs = require('node:fs');
-const path = require('node:path');
-import {Client, Collection, Events, GatewayIntentBits} from "discord.js";
+import fs from 'node:fs';
+import path from 'node:path';
+import { Client, Collection, Events, GatewayIntentBits, type Interaction } from 'discord.js';
 
-declare module "discord.js" {
+declare module 'discord.js' {
 	export interface Client {
-	  commands: Collection<any, any>;
+		commands: Collection<string, Command>;
 	}
-  }
+}
 
-const client = new Client({intents: [GatewayIntentBits.Guilds]});
+interface Command {
+	data: {
+		name: string;
+		toJSON: () => any;
+	};
+	execute: (interaction: Interaction) => Promise<void>;
+}
 
-client.commands = new Collection();
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+client.commands = new Collection<string, Command>();
 
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
@@ -20,20 +28,23 @@ for (const folder of commandFolders) {
 	const commandFiles = fs.readdirSync(commandsPath).filter((file: string) => file.endsWith('.ts'));
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
-		const command = require(filePath);
-		// Set a new item in the Collection with the key as the command name and the value as the exported module
-		if ('data' in command && 'execute' in command) {
-			client.commands.set(command.data.name, command);
-		} else {
-			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-		}
+		// Using dynamic import for proper typing
+		import(filePath).then((command: Command) => {
+			if ('data' in command && 'execute' in command) {
+				client.commands.set(command.data.name, command);
+			} else {
+				console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+			}
+		}).catch((error) => {
+			console.error(`[ERROR] Failed to import the command at ${filePath}:`, error);
+		});
 	}
 }
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 	if (!interaction.isChatInputCommand()) return;
 
-	const command = interaction.client.commands.get(interaction.commandName);
+	const command = client.commands.get(interaction.commandName);
 
 	if (!command) {
 		console.error(`No command matching ${interaction.commandName} was found.`);
@@ -54,6 +65,6 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.once(Events.ClientReady, (c) => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
-  });
+});
 
 client.login(process.env.DISCORD_TOKEN);
