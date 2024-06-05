@@ -14,4 +14,7 @@ export default tseslint.config(
       },
     },
   },
+  {
+    ignores: ["index.ts", "deploy-commands.ts"]
+  }
 );
