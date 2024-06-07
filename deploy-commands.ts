@@ -1,6 +1,6 @@
-const { REST, Routes } = require('discord.js');
-const fs = require('node:fs');
-const path = require('node:path');
+import { REST, Routes } from 'discord.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
@@ -20,17 +20,17 @@ for (const folder of commandFolders) {
 	}
 }
 
-const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+const rest = new REST().setToken(process.env.DISCORD_TOKEN || "");
 
 (async () => {
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
 		const data = await rest.put(
-			Routes.applicationCommands(process.env.CLIENT_ID),
+			Routes.applicationCommands(process.env.CLIENT_ID || ""),
 			{ body: commands },
 		);
-
+		//@ts-expect-error ill fix this later lol but data is of type unknown
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
 		console.error(error);
