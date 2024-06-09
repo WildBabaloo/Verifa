@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     await addRoleToDatabase(role);
-	interaction.reply("set lockdown role command")
+	await interaction.reply(`The role ${role} has been set as the default lockdown role`)
 }
 
 function isRole(role: Role | APIRole): role is Role {
@@ -26,5 +26,8 @@ function isRole(role: Role | APIRole): role is Role {
 }
 
 async function addRoleToDatabase(role: Role){
-
+    const database = process.env.MONGO_DB;
+    if (!database) return null
+    await mongoose.connect(database);
+    console.log("Connected to the database");
 }
