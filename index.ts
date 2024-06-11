@@ -21,6 +21,7 @@ async function connectToDatabase() {
 }
 
 await connectToDatabase();
+export { database }
 
 // Connect discord bot 
 declare module 'discord.js' {

@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole } from 'discord.js';
+import { database } from '../..';
 import * as mongoose from "mongoose";
 
 export const data = new SlashCommandBuilder()
@@ -26,8 +27,5 @@ function isRole(role: Role | APIRole): role is Role {
 }
 
 async function addRoleToDatabase(role: Role){
-    const database = process.env.MONGO_DB;
-    if (!database) return null
-    await mongoose.connect(database);
-    console.log("Connected to the database");
+    console.log(database);
 }
