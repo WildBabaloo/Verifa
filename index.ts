@@ -1,7 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Client, Collection, Events, GatewayIntentBits, type Interaction } from 'discord.js';
+import * as mongoose from "mongoose";
 
+// Connection to the database
+const database = process.env.MONGO_DB;
+if (!database) {
+    console.error("Database URL is not set in environment variables.");
+    process.exit(1);
+}
+
+async function connectToDatabase() {
+    try {
+        await mongoose.connect(database as string);
+        console.log("Connected to the database");
+    } catch (error) {
+        console.error("Could not connect to the database", error);
+        process.exit(1); 
+    }
+}
+
+await connectToDatabase();
+
+// Connect discord bot 
 declare module 'discord.js' {
 	export interface Client {
 		commands: Collection<string, Command>;
