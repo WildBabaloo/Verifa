@@ -33,4 +33,4 @@ const serverSchema = new Schema({
 });
 
 export type Server = mongoose.InferSchemaType<typeof serverSchema>;
-export const Server = mongoose.model("Server", serverSchema);
+export const Server = mongoose.model("Servers", serverSchema);
