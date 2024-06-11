@@ -1,5 +1,7 @@
 # Verifa
 
+It might take a while since im learning Typescript, MongoDB and Bun all at once
+
 To install dependencies:
 
 ```bash
