@@ -1,31 +1,31 @@
 import mongoose, { Schema } from "mongoose";
 
 const serverSchema = new Schema({
-    id: Number,
+    id: String,
     name: String,
     serverConfig: {
         lockdownActive: Boolean,
-        lockdownRoleID: Number,
-        lockdownChannels: [Number]
+        lockdownRoleID: String,
+        lockdownChannels: [String]
     },
     loggedMembers: {
         globalBannedMembers: {
-            userID: Number,
+            userID: String,
             username: String,
             reason: String
         },
         lockdownedMembers: {
-            userID: Number,
+            userID: String,
             username: String,
             reason: String
         },
         warnedMembers: {
-            userID: Number,
+            userID: String,
             username: String,
             reason: String
         },
         notedMembers: {
-            userID: Number,
+            userID: String,
             username: String,
             reason: String
         }
