@@ -1,7 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole } from 'discord.js';
-import { database } from '../..';
 import { Server } from '../../database/schemas/servers';
-import * as mongoose from "mongoose";
 
 export const data = new SlashCommandBuilder()
 	.setName('set_lockdown_role')
@@ -29,8 +27,26 @@ function isRole(role: Role | APIRole): role is Role {
     return (role as Role).id !== undefined;
 }
 
-async function addRoleToDatabase(role: Role, serverID: string, serverName: String) {
-    const server = new Server({
+async function addRoleToDatabase(role: Role, serverID: string, serverName: string) {
+    try {
+        let server = await Server.findOne({id: serverID})
+        if (!server) {
+            console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
+            server = await makeNewServerDocument(role, serverID, serverName);
+            await server.save();
+            console.log(`The ${role.name} (id: ${role}) role for the server called ${serverName} has been saved to the database`);
+        } else {
+            Server.findOneAndUpdate({id: serverID}, {serverConfig: {lockdownRoleID: role}});
+            console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role}) has been added`)
+        }
+    } catch (error) {
+        console.error(`Could not save the server ${serverID} under the name ${serverName} and/or role ${role} to the database`, error);
+        return null; 
+    }
+}
+
+async function makeNewServerDocument(role: Role, serverID: string, serverName: string) {
+    return new Server({
         id: serverID,
         name: serverName,
         serverConfig: {
@@ -45,11 +61,4 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: Strin
             notedMembers: null
         }
     })
-    try {
-        await server.save();
-        console.log(`The ${role} role for the server called ${serverName} has been saved to the database`);
-    } catch (error) {
-        console.error(`Could not save ${role} to the database`, error);
-        return null; 
-    }
 }
