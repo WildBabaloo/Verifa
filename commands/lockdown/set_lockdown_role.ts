@@ -10,7 +10,6 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.options.getRole("role");
-    console.log(`The role selected is ${role}`)
     if (!role || !isRole(role)) {
         await interaction.deferReply({ ephemeral: true })
         await interaction.reply("This is not a valid role")
@@ -34,13 +33,13 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             server = await makeNewServerDocument(role, serverID, serverName);
             await server.save();
-            console.log(`The ${role.name} (id: ${role}) role for the server called ${serverName} has been saved to the database`);
+            console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
-            await Server.findOneAndUpdate({id: serverID}, {serverConfig: {lockdownRoleID: role}}, {new: true});
-            console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role}) has been updated`);
+            await Server.findOneAndUpdate({id: serverID}, {serverConfig: {lockdownRoleID: role.id}}, {new: true});
+            console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been updated`);
         }
     } catch (error) {
-        console.error(`Could not save the server ${serverID} under the name ${serverName} and/or role ${role} to the database`, error);
+        console.error(`Could not save the server ${serverID} under the name ${serverName} and/or role ${role.id} to the database`, error);
         return null; 
     }
 }
@@ -51,7 +50,7 @@ async function makeNewServerDocument(role: Role, serverID: string, serverName: s
         name: serverName,
         serverConfig: {
             lockdownActive: true,
-            lockdownRoleID: role,
+            lockdownRoleID: role.id,
             lockdownChannels: []
         },
         loggedMembers: {
