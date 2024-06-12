@@ -49,7 +49,6 @@ async function makeNewServerDocument(role: Role, serverID: string, serverName: s
         id: serverID,
         name: serverName,
         serverConfig: {
-            lockdownActive: true,
             lockdownRoleID: role.id,
             lockdownChannels: []
         },

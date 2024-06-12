@@ -4,7 +4,6 @@ const serverSchema = new Schema({
     id: String,
     name: String,
     serverConfig: {
-        lockdownActive: Boolean,
         lockdownRoleID: String,
         lockdownChannels: [String]
     },
