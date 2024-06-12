@@ -50,7 +50,7 @@ async function makeNewServerDocument(role: Role, serverID: string, serverName: s
         name: serverName,
         serverConfig: {
             lockdownRoleID: role.id,
-            lockdownChannels: []
+            lockdownLogChannel: null
         },
         loggedMembers: {
             globalBannedMembers: null,
