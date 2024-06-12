@@ -11,15 +11,15 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.deferReply({ ephemeral: true })
-        await interaction.reply("This is not a valid role")
+        await interaction.deferReply({ ephemeral: true });
+        await interaction.reply("This is not a valid role");
         return;
     }
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role ${role} has been set as the default lockdown role`)
+	await interaction.reply(`The role ${role} has been set as the default lockdown role`);
 }
 
 function isRole(role: Role | APIRole): role is Role {
