@@ -31,7 +31,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
         let server = await Server.findOne({id: serverID})
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
-            server = await makeNewServerDocument(role, serverID, serverName);
+            server = await makeNewServerDocumentWithRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
@@ -44,7 +44,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
     }
 }
 
-async function makeNewServerDocument(role: Role, serverID: string, serverName: string) {
+async function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName: string) {
     return new Server({
         id: serverID,
         name: serverName,
@@ -58,5 +58,5 @@ async function makeNewServerDocument(role: Role, serverID: string, serverName: s
             warnedMembers: null,
             notedMembers: null
         }
-    })
+    });
 }

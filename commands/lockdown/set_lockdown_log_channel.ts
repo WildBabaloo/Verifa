@@ -12,16 +12,47 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel("channel");
     if (!(channel instanceof TextChannel)) {
         await interaction.deferReply({ ephemeral: true });
-        await interaction.reply("The channel must be a text channel");
+        // await interaction.reply("The channel must be a text channel");
         return;
     }
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addLogChannelToDatabase(channel, serverID, serverName);
-    await interaction.reply(`The ${channel.name} (id: ${channel.id}) is now the new default log channel for lockdowns`);
+    await interaction.reply(`The ${channel} channel is now the new default log channel for lockdowns`);
 }
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
+    try {
+        let server = await Server.findOne({ id: serverID })
+        if (!server) {
+            console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
+            server = await makeNewServerDocumentWithChannel(channel, serverID, serverName);
+            await server.save();
+            console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
+        } else {
+            await Server.findOneAndUpdate({id: serverID}, {serverConfig: {lockdownLogChannel: channel.id}}, {new: true});
+            console.log(`Server ${serverName} (id: ${serverID}) was found and its channel ${channel.name} (id: ${channel.id}) has been updated`);
+        }
+    } catch (error) {
+        console.error(`Could not save the server ${serverID} under the name ${serverName} and/or channel ${channel.id} to the database`, error);
+        return null; 
+    }
+}
 
+async function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string, serverName: string) {
+    return new Server({
+        id: serverID,
+        name: serverName,
+        serverConfig: {
+            lockdownRoleID: null,
+            lockdownLogChannel: channel.id
+        },
+        loggedMembers: {
+            globalBannedMembers: null,
+            lockdownedMembers: null,
+            warnedMembers: null,
+            notedMembers: null
+        }
+    });
 }
