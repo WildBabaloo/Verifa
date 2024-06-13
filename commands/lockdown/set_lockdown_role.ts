@@ -11,15 +11,14 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.deferReply({ ephemeral: true })
-        await interaction.reply("This is not a valid role")
+        await interaction.reply({content: "This is not a valid role", ephemeral: true});
         return;
     }
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role ${role} has been set as the default lockdown role`)
+	await interaction.reply(`The role ${role} has been set as the default lockdown role`);
 }
 
 function isRole(role: Role | APIRole): role is Role {
@@ -31,11 +30,11 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
         let server = await Server.findOne({id: serverID})
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
-            server = await makeNewServerDocument(role, serverID, serverName);
+            server = await makeNewServerDocumentWithRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
-            await Server.findOneAndUpdate({id: serverID}, {serverConfig: {lockdownRoleID: role.id}}, {new: true});
+            await Server.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownRoleID": role.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been updated`);
         }
     } catch (error) {
@@ -44,13 +43,13 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
     }
 }
 
-async function makeNewServerDocument(role: Role, serverID: string, serverName: string) {
+async function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName: string) {
     return new Server({
         id: serverID,
         name: serverName,
         serverConfig: {
             lockdownRoleID: role.id,
-            lockdownChannels: []
+            lockdownLogChannel: null
         },
         loggedMembers: {
             globalBannedMembers: null,
@@ -58,5 +57,5 @@ async function makeNewServerDocument(role: Role, serverID: string, serverName: s
             warnedMembers: null,
             notedMembers: null
         }
-    })
+    });
 }
