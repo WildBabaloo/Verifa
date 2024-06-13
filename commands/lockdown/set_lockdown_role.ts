@@ -11,8 +11,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.deferReply({ ephemeral: true });
-        await interaction.reply("This is not a valid role");
+        await interaction.reply({content: "This is not a valid role", ephemeral: true});
         return;
     }
 
