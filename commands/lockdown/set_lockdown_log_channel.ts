@@ -11,8 +11,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel("channel");
     if (!(channel instanceof TextChannel)) {
-        await interaction.deferReply({ ephemeral: true });
-        // await interaction.reply("The channel must be a text channel");
+        await interaction.reply({content: "Error! The channel must be a text channel!", ephemeral: true});
         return;
     }
 
