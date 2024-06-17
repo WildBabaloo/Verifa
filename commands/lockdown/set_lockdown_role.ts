@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole } from 'discord.js';
-import { Server } from '../../database/schemas/servers';
+import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
 	.setName('set_lockdown_role')
@@ -27,14 +27,14 @@ function isRole(role: Role | APIRole): role is Role {
 
 async function addRoleToDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        let server = await Server.findOne({id: serverID})
+        let server = await Servers.findOne({id: serverID})
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             server = await makeNewServerDocumentWithRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
-            await Server.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownRoleID": role.id}});
+            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownRoleID": role.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been updated`);
         }
     } catch (error) {
@@ -44,7 +44,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
 }
 
 async function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName: string) {
-    return new Server({
+    return new Servers({
         id: serverID,
         name: serverName,
         serverConfig: {

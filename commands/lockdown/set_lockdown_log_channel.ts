@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
-import { Server } from "../../database/schemas/servers";
+import { Servers } from "../../database/schemas/servers";
 
 export const data = new SlashCommandBuilder()
     .setName("set_lockdown_log_channel")
@@ -23,14 +23,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
     try {
-        let server = await Server.findOne({ id: serverID })
+        let server = await Servers.findOne({ id: serverID })
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             server = await makeNewServerDocumentWithChannel(channel, serverID, serverName);
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
         } else {
-            await Server.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownLogChannel": channel.id}});
+            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownLogChannel": channel.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its channel ${channel.name} (id: ${channel.id}) has been updated`);
         }
     } catch (error) {
@@ -40,7 +40,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
 }
 
 async function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string, serverName: string) {
-    return new Server({
+    return new Servers({
         id: serverID,
         name: serverName,
         serverConfig: {

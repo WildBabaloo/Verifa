@@ -14,8 +14,7 @@ const userSchema = new Schema({
         activeLockdowns: {
             server: {
                 serverID: String, 
-                serverName: String,
-                reason: String
+                serverName: String
             }
         },
         notes: {
@@ -28,5 +27,5 @@ const userSchema = new Schema({
     }
 });
 
-export type User = mongoose.InferSchemaType<typeof userSchema>;
-export const User = mongoose.model("Users", userSchema);
+export type Users = mongoose.InferSchemaType<typeof userSchema>;
+export const Users = mongoose.model("Users", userSchema);
