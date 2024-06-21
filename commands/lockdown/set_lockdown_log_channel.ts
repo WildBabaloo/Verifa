@@ -25,7 +25,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
     try {
         let server = await Servers.findOne({ id: serverID })
         if (!server) {
-            console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
+            console.log(`Server ${serverName} (id: ${serverID}) was not found in the database. Adding it now...`);
             server = makeNewServerDocumentWithChannel(channel, serverID, serverName);
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
