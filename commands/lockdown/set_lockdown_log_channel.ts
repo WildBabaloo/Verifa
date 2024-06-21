@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addLogChannelToDatabase(channel, serverID, serverName);
-    await interaction.reply(`The ${channel} channel is now the new default log channel for lockdowns`);
+    await interaction.reply(`The ${channel.name} channel is now the new default log channel for lockdowns`);
 }
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
@@ -26,7 +26,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
         let server = await Servers.findOne({ id: serverID })
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
-            server = await makeNewServerDocumentWithChannel(channel, serverID, serverName);
+            server = makeNewServerDocumentWithChannel(channel, serverID, serverName);
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
         } else {
@@ -39,7 +39,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
     }
 }
 
-async function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string, serverName: string) {
+function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string, serverName: string) {
     return new Servers({
         id: serverID,
         name: serverName,

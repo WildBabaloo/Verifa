@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role ${role} has been set as the default lockdown role`);
+	await interaction.reply(`The role ${role.name} (ID: ${role.id}) has been set as the default lockdown role`);
 }
 
 function isRole(role: Role | APIRole): role is Role {
@@ -30,7 +30,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
         let server = await Servers.findOne({id: serverID})
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
-            server = await makeNewServerDocumentWithRole(role, serverID, serverName);
+            server = makeNewServerDocumentWithRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
@@ -43,7 +43,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
     }
 }
 
-async function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName: string) {
+function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName: string) {
     return new Servers({
         id: serverID,
         name: serverName,
