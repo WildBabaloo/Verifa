@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
 
@@ -29,6 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
+		await user.send({ embeds: [embedBuilderToDMUser(serverID, serverName)] });
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'An error occurred while trying to add the lockdown role.', ephemeral: true });
@@ -71,4 +72,13 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 			notes: null,
 		}
 	})
+}
+
+function embedBuilderToDMUser(serverID: string, serverName: string): EmbedBuilder {
+	// TODO customizable title and description (found in ticket 35)
+	return new EmbedBuilder()
+	.setColor(0xE10600)
+	.setTitle(`You have been locked down in ${serverName} (ID: ${serverID})`)
+	.setDescription(`You have been deemed suspicious by the server owners and mods and is currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
+	.setTimestamp();
 }
