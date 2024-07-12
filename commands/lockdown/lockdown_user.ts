@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	try {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
-        await interaction.reply(`User ${user.username} (ID: ${user.id}) has been put in lockdown`);
+        await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'An error occurred while trying to add the lockdown role.', ephemeral: true });
