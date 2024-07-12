@@ -38,7 +38,11 @@ interface Command {
 	execute: (interaction: Interaction) => Promise<void>;
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [
+	GatewayIntentBits.Guilds,
+	GatewayIntentBits.GuildMembers,
+	] 
+});
 
 client.commands = new Collection<string, Command>();
 
