@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, User } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
 
@@ -23,7 +23,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has an unknown issue with it. Please use another role instead`});
 		return;
 	}
-	await interaction.reply(`User ${user.globalName} (ID: ${user.id}) has been put in lockdown`);
+	
+	// Giving user the lockdown role
+	try {
+        const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
+        await member.roles.add(lockdownRoleID);
+        await interaction.reply(`User ${user.username} (ID: ${user.id}) has been put in lockdown`);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'An error occurred while trying to add the lockdown role.', ephemeral: true });
+    }
 }
 
 async function addUserToTheDatabase(user: User, serverID: string, serverName: string) {
