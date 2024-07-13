@@ -15,12 +15,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({content: "Error! The user is invalid", ephemeral: true});
 		return;
 	}
+
 	const currentChannel = interaction.channel;
 	if (!currentChannel) { 
 		console.error("Interaction channel is null."); 
 		await interaction.reply({content: "Error processing this command due to an unknown error (Most likely of discord's part)", ephemeral: true});
 		return;
 	}
+
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
 	const moderator = interaction.user.id;
@@ -41,7 +43,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		const logChannelID = await getLogChannelIDFromDatbase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
-			
 			if (logChannel) {
 				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(user.id, user.username, userAvatar , moderator)] });
 			} else {
