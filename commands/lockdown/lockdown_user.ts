@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
 
@@ -15,10 +15,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({content: "Error! The user is invalid", ephemeral: true});
 		return;
 	}
+
+	const currentChannel = interaction.channel;
+	if (!currentChannel) { 
+		console.error("Interaction channel is null."); 
+		await interaction.reply({content: "Error processing this command due to an unknown error (Most likely of discord's part)", ephemeral: true});
+		return;
+	}
+
     const serverID = interaction.guild?.id as string;
-    const serverName = interaction.guild?.name as string;	
+    const serverName = interaction.guild?.name as string;
+	const moderator = interaction.user.id;
+	const userAvatar = user.avatarURL();	
 	await addUserToTheDatabase(user, serverID, serverName);
-	const lockdownRoleID = await getLockdownRoleID(serverID);
+	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
 		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has an unknown issue with it. Please use another role instead`});
 		return;
@@ -29,7 +39,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
-		await user.send({ embeds: [embedBuilderToDMUser(serverID, serverName)] });
+		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
+		const logChannelID = await getLogChannelIDFromDatbase(serverID);
+		if (logChannelID) {
+			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
+			if (logChannel) {
+				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(user.id, user.username, userAvatar , moderator)] });
+			} else {
+				void currentChannel.send("Log channel was not found. The channel was either deleted or the bot has no longer has permissions to it");
+			}
+		} else {
+			void currentChannel.send("Note: The log channel has not been configured");
+		}
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'An error occurred while trying to add the lockdown role.', ephemeral: true });
@@ -51,12 +72,6 @@ async function addUserToTheDatabase(user: User, serverID: string, serverName: st
 	}
 }
 
-async function getLockdownRoleID(serverID: string) {
-	const theServer = await Servers.findOne({ id: serverID });
-	if (!theServer) return null;
-	return theServer.serverConfig?.lockdownRoleID;
-}
-
 function makeNewUserDocumentWithLockdown(userId: string, username: string, serverID: string, serverName: string) {
 	return new Users({
 		id: userId,
@@ -74,11 +89,36 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 	})
 }
 
-function embedBuilderToDMUser(serverID: string, serverName: string): EmbedBuilder {
+async function getLockdownRoleIDFromDatabase(serverID: string) {
+	const theServer = await Servers.findOne({ id: serverID });
+	if (!theServer) return null;
+	return theServer.serverConfig?.lockdownRoleID;
+}
+
+async function getLogChannelIDFromDatbase(serverID: string) {
+	const theServer = await Servers.findOne({ id: serverID });
+	if (!theServer) return null;
+	return theServer.serverConfig?.lockdownLogChannel;
+}
+
+function embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID: string, serverName: string): EmbedBuilder {
 	// TODO customizable title and description (found in ticket 35)
 	return new EmbedBuilder()
 	.setColor(0xE10600)
 	.setTitle(`You have been locked down in ${serverName} (ID: ${serverID})`)
 	.setDescription(`You have been deemed suspicious by the server owners and mods and is currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
 	.setTimestamp();
+}
+
+function embedBuilderForLogChannelWhenUserHasBeenLockedDown(userID: string, username: string, userAvatar: string | null, moderatorID: string): EmbedBuilder {
+	return new EmbedBuilder()
+	.setColor(0xFFE900)
+	.setThumbnail(userAvatar)
+	.setTitle(`User Under Lockdown | ${username}`)
+	.addFields(
+		{ name: 'User', value: `<@${userID}>`, inline: true },
+		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true }
+	)
+	.setFooter({ text: `ID: ${userID}` })
+	.setTimestamp()
 }
