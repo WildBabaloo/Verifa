@@ -22,7 +22,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
     const serverID = interaction.guild?.id as string;
-    const serverName = interaction.guild?.name as string;	
+    const serverName = interaction.guild?.name as string;
+	const moderator = interaction.user.id;
+	const userAvatar = user.avatarURL();	
 	await addUserToTheDatabase(user, serverID, serverName);
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
@@ -35,12 +37,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
-		await user.send({ embeds: [embedBuilderToDMUser(serverID, serverName)] });
+		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatbase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
+			
 			if (logChannel) {
-				await logChannel.send(`User <@${user.id}> (ID: ${user.id}) has been put into lockdown`);
+				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(user.id, user.username, userAvatar , moderator)] });
 			} else {
 				void currentChannel.send("Log channel was not found. The channel was either deleted or the bot has no longer has permissions to it");
 			}
@@ -85,16 +88,6 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 	})
 }
 
-function embedBuilderToDMUser(serverID: string, serverName: string): EmbedBuilder {
-	// TODO customizable title and description (found in ticket 35)
-	return new EmbedBuilder()
-	.setColor(0xE10600)
-	.setTitle(`You have been locked down in ${serverName} (ID: ${serverID})`)
-	.setDescription(`You have been deemed suspicious by the server owners and mods and is currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
-	.setTimestamp();
-}
-
-
 async function getLockdownRoleIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
@@ -105,4 +98,26 @@ async function getLogChannelIDFromDatbase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
 	return theServer.serverConfig?.lockdownLogChannel;
+}
+
+function embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID: string, serverName: string): EmbedBuilder {
+	// TODO customizable title and description (found in ticket 35)
+	return new EmbedBuilder()
+	.setColor(0xE10600)
+	.setTitle(`You have been locked down in ${serverName} (ID: ${serverID})`)
+	.setDescription(`You have been deemed suspicious by the server owners and mods and is currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
+	.setTimestamp();
+}
+
+function embedBuilderForLogChannelWhenUserHasBeenLockedDown(userID: string, username: string, userAvatar: string | null, moderatorID: string): EmbedBuilder {
+	return new EmbedBuilder()
+	.setColor(0xFFE900)
+	.setThumbnail(userAvatar)
+	.setTitle(`User under lockdown | ${username}`)
+	.addFields(
+		{ name: 'User', value: `<@${userID}>`, inline: true },
+		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true}
+	)
+	.setFooter({ text: `ID: ${userID}` })
+	.setTimestamp()
 }
