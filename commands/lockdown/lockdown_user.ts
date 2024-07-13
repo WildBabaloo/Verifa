@@ -113,10 +113,10 @@ function embedBuilderForLogChannelWhenUserHasBeenLockedDown(userID: string, user
 	return new EmbedBuilder()
 	.setColor(0xFFE900)
 	.setThumbnail(userAvatar)
-	.setTitle(`User under lockdown | ${username}`)
+	.setTitle(`User Under Lockdown | ${username}`)
 	.addFields(
 		{ name: 'User', value: `<@${userID}>`, inline: true },
-		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true}
+		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true }
 	)
 	.setFooter({ text: `ID: ${userID}` })
 	.setTimestamp()
