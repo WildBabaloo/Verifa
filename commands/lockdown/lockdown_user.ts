@@ -27,10 +27,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverName = interaction.guild?.name as string;
 	const moderator = interaction.user.id;
 	const userAvatar = user.avatarURL();	
-	await addUserToTheDatabase(user, serverID, serverName);
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
-		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has an unknown issue with it. Please use another role instead`});
+		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has not been set up. Please use another role instead`, ephemeral: true});
 		return;
 	}
 	
@@ -38,6 +37,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	try {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
+		await addUserToTheUserSchema(user, serverID, serverName);
+		await addUserToTheServerSchema(user, serverID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatbase(serverID);
@@ -57,7 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
-async function addUserToTheDatabase(user: User, serverID: string, serverName: string) {
+async function addUserToTheUserSchema(user: User, serverID: string, serverName: string) {
 	try {
 		let theUser = await Users.findOne({ id: user.id });
 		if (!theUser) {
@@ -65,6 +66,9 @@ async function addUserToTheDatabase(user: User, serverID: string, serverName: st
 			theUser = makeNewUserDocumentWithLockdown(user.id, user.globalName as string, serverID, serverName)
 			await theUser.save();
 			console.log(`User ${user.globalName} (ID: ${user.id}) has been added to the database`);
+		} else {
+			await Users.findOneAndUpdate({id: user.id}, {$set: {"userLogs.activeLockdowns.server.serverID": serverID}}, {$set: {"userLogs.activeLockdowns.server.serverName": serverName}});
+			console.log(`Updated user schema for ${user.globalName}. He is now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
 		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
@@ -87,6 +91,14 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 			notes: null,
 		}
 	})
+}
+
+async function addUserToTheServerSchema(user: User, serverID: string) {
+	try {
+		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id}}, {$set: {"loggedMembers.lockdownedMembers.username": user.globalName}});
+	} catch (error) {
+		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID})`);
+	}
 }
 
 async function getLockdownRoleIDFromDatabase(serverID: string) {
