@@ -9,7 +9,8 @@ export async function execute(interaction: CommandInteraction) {
 	const serverID = interaction.guild?.id as string;
 	const server = await Servers.findOne({id: serverID})
 	if (!server) {
-		void interaction.reply("This server has not configured its lockdown settings yet. You can do so with the /set_lockdown commands");
+		void interaction.reply({content: "This server has not configured its lockdown settings yet. You can do so with the /set_lockdown commands", });
+		return;
 	}
 	const lockdownRoleID = server?.serverConfig?.lockdownRoleID ?? "This value has not been set";
 	const lockdownLogChannelID = server?.serverConfig?.lockdownLogChannel ?? "This value has not been set";

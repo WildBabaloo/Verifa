@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role ${role.name} (ID: ${role.id}) has been set as the default lockdown role`);
+	await interaction.reply(`The role <@&${role.id}> has been set as the default lockdown role`);
 }
 
 function isRole(role: Role | APIRole): role is Role {
@@ -49,13 +49,30 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
         name: serverName,
         serverConfig: {
             lockdownRoleID: role.id,
-            lockdownLogChannel: null
+            lockdownLogChannel: null,
+            reason: "You are sus", // To make it custom later on
         },
         loggedMembers: {
-            globalBannedMembers: null,
-            lockdownedMembers: null,
-            warnedMembers: null,
-            notedMembers: null
+            globalBannedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            lockdownedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            warnedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            notedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            }
         }
     });
 }

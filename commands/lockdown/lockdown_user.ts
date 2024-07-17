@@ -27,17 +27,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverName = interaction.guild?.name as string;
 	const moderator = interaction.user.id;
 	const userAvatar = user.avatarURL();	
-	await addUserToTheDatabase(user, serverID, serverName);
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
-		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has an unknown issue with it. Please use another role instead`});
+		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has not been set up. Please use another role instead`, ephemeral: true});
 		return;
 	}
 	
+	const alreadyLockdowned = await checkIfUserIsAlreadyLockedownInThatServer(serverID, user);
+	if (alreadyLockdowned) {
+		await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
+		return;
+	}
+
 	// Giving user the lockdown role
 	try {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
+		await addUserToTheUserSchema(user, serverID, serverName);
+		await addUserToTheServerSchema(user, serverID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatbase(serverID);
@@ -57,7 +64,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
-async function addUserToTheDatabase(user: User, serverID: string, serverName: string) {
+async function checkIfUserIsAlreadyLockedownInThatServer(serverID: string, user: User) {
+	const theUser = await Users.findOne({ id: user.id });
+	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
+		return false; // Nothing found in the DB
+	}
+
+	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
+}
+
+async function addUserToTheUserSchema(user: User, serverID: string, serverName: string) {
 	try {
 		let theUser = await Users.findOne({ id: user.id });
 		if (!theUser) {
@@ -65,6 +81,9 @@ async function addUserToTheDatabase(user: User, serverID: string, serverName: st
 			theUser = makeNewUserDocumentWithLockdown(user.id, user.globalName as string, serverID, serverName)
 			await theUser.save();
 			console.log(`User ${user.globalName} (ID: ${user.id}) has been added to the database`);
+		} else {
+			await Users.findOneAndUpdate({id: user.id}, {$push: {"userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus"}});
+			console.log(`Updated user schema for ${user.globalName}. They are now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
 		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
@@ -77,16 +96,38 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 		id: userId,
 		username: username,
 		userLogs: {
-			globalBans: null,
-			activeLockdowns: {
+			globalBans: {
 				server: {
-					serverID: serverID, 
-					serverName: serverName,
+					serverID: [], 
+					serverName: [],
+					reason: [],
 				}
 			},
-			notes: null,
+			activeLockdowns: {
+				server: {
+					serverID: [serverID], 
+					serverName: [serverName],
+					reason: ["You are sus"],
+				}
+			},
+			notes: {
+				server: {
+					serverID: [], 
+					serverName: [],
+					reason: [],
+				}
+			},
 		}
 	})
+}
+
+async function addUserToTheServerSchema(user: User, serverID: string) {
+	try {
+		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName}});
+	} catch (error) {
+		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID}) Here is the error message: `);
+		console.error(error);
+	}
 }
 
 async function getLockdownRoleIDFromDatabase(serverID: string) {
