@@ -9,24 +9,24 @@ const serverSchema = new Schema({
     },
     loggedMembers: {
         globalBannedMembers: {
-            userID: String,
-            username: String,
-            reason: String
+            userID: [String],
+            username: [String],
+            reason: [String]
         },
         lockdownedMembers: {
-            userID: String,
-            username: String,
-            reason: String
+            userID: [String],
+            username: [String],
+            reason: [String]
         },
         warnedMembers: {
-            userID: String,
-            username: String,
-            reason: String
+            userID: [String],
+            username: [String],
+            reason: [String]
         },
         notedMembers: {
-            userID: String,
-            username: String,
-            reason: String
+            userID: [String],
+            username: [String],
+            reason: [String]
         }
     }
 });
