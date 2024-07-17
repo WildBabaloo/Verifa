@@ -14,7 +14,8 @@ const userSchema = new Schema({
         activeLockdowns: {
             server: {
                 serverID: [String], 
-                serverName: [String]
+                serverName: [String],
+                reason: [String]
             }
         },
         notes: {

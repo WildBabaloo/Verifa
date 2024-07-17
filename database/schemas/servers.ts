@@ -5,7 +5,8 @@ const serverSchema = new Schema({
     name: String,
     serverConfig: {
         lockdownRoleID: String,
-        lockdownLogChannel: String
+        lockdownLogChannel: String,
+        reason: String
     },
     loggedMembers: {
         globalBannedMembers: {
