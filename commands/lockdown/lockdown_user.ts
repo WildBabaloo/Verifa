@@ -33,6 +33,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
 	
+	const alreadyLockdowned = await checkIfUserIsAlreadyLockedownInThatServer(serverID, user);
+	if (alreadyLockdowned) {
+		await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
+		return;
+	}
+
 	// Giving user the lockdown role
 	try {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
@@ -58,6 +64,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
+async function checkIfUserIsAlreadyLockedownInThatServer(serverID: string, user: User) {
+	const theUser = await Users.findOne({ id: user.id });
+	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
+		return false; // Nothing found in the DB
+	}
+
+	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
+}
+
 async function addUserToTheUserSchema(user: User, serverID: string, serverName: string) {
 	try {
 		let theUser = await Users.findOne({ id: user.id });
@@ -67,8 +82,8 @@ async function addUserToTheUserSchema(user: User, serverID: string, serverName: 
 			await theUser.save();
 			console.log(`User ${user.globalName} (ID: ${user.id}) has been added to the database`);
 		} else {
-			await Users.findOneAndUpdate({id: user.id}, {$set: {"userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName}});
-			console.log(`Updated user schema for ${user.globalName}. He is now marked as lockdowned in ${serverName}`);
+			await Users.findOneAndUpdate({id: user.id}, {$push: {"userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus"}});
+			console.log(`Updated user schema for ${user.globalName}. They are now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
 		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);

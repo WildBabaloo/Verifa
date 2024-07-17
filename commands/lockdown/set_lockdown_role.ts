@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role ${role.name} (ID: ${role.id}) has been set as the default lockdown role`);
+	await interaction.reply(`The role <@&${role.id}> has been set as the default lockdown role`);
 }
 
 function isRole(role: Role | APIRole): role is Role {
