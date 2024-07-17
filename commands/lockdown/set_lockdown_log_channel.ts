@@ -45,13 +45,30 @@ function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string
         name: serverName,
         serverConfig: {
             lockdownRoleID: null,
-            lockdownLogChannel: channel.id
+            lockdownLogChannel: channel.id,
+            reason: "You are sus", // To make it custom later on
         },
         loggedMembers: {
-            globalBannedMembers: null,
-            lockdownedMembers: null,
-            warnedMembers: null,
-            notedMembers: null
+            globalBannedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            lockdownedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            warnedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            notedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            }
         }
     });
 }

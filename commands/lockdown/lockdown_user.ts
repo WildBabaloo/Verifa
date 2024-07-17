@@ -67,7 +67,7 @@ async function addUserToTheUserSchema(user: User, serverID: string, serverName: 
 			await theUser.save();
 			console.log(`User ${user.globalName} (ID: ${user.id}) has been added to the database`);
 		} else {
-			await Users.findOneAndUpdate({id: user.id}, {$set: {"userLogs.activeLockdowns.server.serverID": serverID}}, {$set: {"userLogs.activeLockdowns.server.serverName": serverName}});
+			await Users.findOneAndUpdate({id: user.id}, {$set: {"userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName}});
 			console.log(`Updated user schema for ${user.globalName}. He is now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
@@ -81,23 +81,37 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 		id: userId,
 		username: username,
 		userLogs: {
-			globalBans: null,
-			activeLockdowns: {
+			globalBans: {
 				server: {
-					serverID: serverID, 
-					serverName: serverName,
+					serverID: [], 
+					serverName: [],
+					reason: [],
 				}
 			},
-			notes: null,
+			activeLockdowns: {
+				server: {
+					serverID: [serverID], 
+					serverName: [serverName],
+					reason: ["You are sus"],
+				}
+			},
+			notes: {
+				server: {
+					serverID: [], 
+					serverName: [],
+					reason: [],
+				}
+			},
 		}
 	})
 }
 
 async function addUserToTheServerSchema(user: User, serverID: string) {
 	try {
-		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id}}, {$set: {"loggedMembers.lockdownedMembers.username": user.globalName}});
+		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName}});
 	} catch (error) {
-		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID})`);
+		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID}) Here is the error message: `);
+		console.error(error);
 	}
 }
 

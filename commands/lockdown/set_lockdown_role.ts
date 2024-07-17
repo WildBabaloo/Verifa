@@ -49,13 +49,30 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
         name: serverName,
         serverConfig: {
             lockdownRoleID: role.id,
-            lockdownLogChannel: null
+            lockdownLogChannel: null,
+            reason: "You are sus", // To make it custom later on
         },
         loggedMembers: {
-            globalBannedMembers: null,
-            lockdownedMembers: null,
-            warnedMembers: null,
-            notedMembers: null
+            globalBannedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            lockdownedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            warnedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            },
+            notedMembers: {
+                userID: [],
+                username: [],
+                reason: [],
+            }
         }
     });
 }
