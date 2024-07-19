@@ -87,7 +87,7 @@ async function addServerToTheUserSchema(user: User, serverID: string, serverName
 		}
 	} catch (error) {
 		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
-        return null; 
+		throw error;
 	}
 }
 
@@ -127,6 +127,7 @@ async function addUserToTheServerSchema(user: User, serverID: string) {
 	} catch (error) {
 		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID}) Here is the error message: `);
 		console.error(error);
+		throw error;
 	}
 }
 
