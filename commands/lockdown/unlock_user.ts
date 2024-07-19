@@ -37,6 +37,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.remove(lockdownRoleID);
         await removeServerFromTheUserSchema(user, serverID, serverName);
+        await removeUserFromTheServerSchema(user, serverID);
     } catch (error) {
         console.error(error);
         await interaction.reply({ content: 'An error occurred while trying to remove the lockdown role.', ephemeral: true });
@@ -47,9 +48,17 @@ async function removeServerFromTheUserSchema(user: User, serverID: string, serve
     try {
         await Users.findOneAndUpdate({id: user.id}, {$pull: {"userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName}});
     } catch (error) {
-        console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
+        console.error(`Error removing to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
         throw error;
     }
 }
 
-async function removeUserFromTheServerSchema()
+async function removeUserFromTheServerSchema(user: User, serverID: string) {
+    try {
+        await Servers.findOneAndUpdate({id: serverID}, {$pull: {"loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName}});
+    } catch (error) {
+        console.error(`Error removing to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID}`, error);
+        throw error;
+    }
+}
+

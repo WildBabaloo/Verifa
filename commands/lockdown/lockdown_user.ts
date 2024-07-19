@@ -125,8 +125,7 @@ async function addUserToTheServerSchema(user: User, serverID: string) {
 	try {
 		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName}});
 	} catch (error) {
-		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID}) Here is the error message: `);
-		console.error(error);
+		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID})`, error);
 		throw error;
 	}
 }
