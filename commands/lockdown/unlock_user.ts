@@ -88,8 +88,8 @@ function embedBuilderToDMUserThatTheyAreNoLongerUnderLockdown(serverID: string, 
 	// TODO customizable title and description (found in ticket 35)
 	return new EmbedBuilder()
 	.setColor(0x30DF30)
-	.setTitle(`You have been locked down in ${serverName} (ID: ${serverID})`)
-	.setDescription(`You have been deemed suspicious by the server owners and mods and is currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
+	.setTitle(`You are no longer in lockdown in ${serverName} (ID: ${serverID})`)
+	.setDescription(`You can now view the server as a regular member again.`)
 	.setTimestamp();
 }
 
