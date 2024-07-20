@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel, PermissionsBitField, GuildMember } from "discord.js";
 import { Servers } from "../../database/schemas/servers";
 
 export const data = new SlashCommandBuilder()
@@ -6,9 +6,16 @@ export const data = new SlashCommandBuilder()
     .setDescription("Configure the log channel when the user is in lockdown and when they get out")
     .addChannelOption(option => option.setName("channel")
                             .setDescription("Enter a channel for the logs")
-                            .setRequired(true));
+                            .setRequired(true))
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+    const member = interaction.member as GuildMember;
+    if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+        return;
+    }
+
     const channel = interaction.options.getChannel("channel");
     if (!(channel instanceof TextChannel)) {
         await interaction.reply({content: "Error! The channel must be a text channel!", ephemeral: true});

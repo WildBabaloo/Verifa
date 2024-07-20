@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole, PermissionsBitField, GuildMember } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
@@ -6,9 +6,16 @@ export const data = new SlashCommandBuilder()
 	.setDescription('Sets the role given when the user is in lockdown mode')
     .addRoleOption(option => option.setName("role")
                         .setDescription("Enter the role")
-                        .setRequired(true));
+                        .setRequired(true))
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+    const member = interaction.member as GuildMember;
+    if (!member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+        await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+        return;
+    }
+
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
         await interaction.reply({content: "This is not a valid role", ephemeral: true});
