@@ -26,16 +26,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
 	const moderator = interaction.user.id;
-	const userAvatar = user.avatarURL();	
+	const userAvatar = user.avatarURL();
+	const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
+	if (alreadyLockdowned) {
+		await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
+		return;
+	}
+
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
 		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has not been set up. Please use another role instead`, ephemeral: true});
-		return;
-	}
-	
-	const alreadyLockdowned = await checkIfUserIsAlreadyLockedownInThatServer(serverID, user);
-	if (alreadyLockdowned) {
-		await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
 		return;
 	}
 
@@ -43,11 +43,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	try {
         const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
         await member.roles.add(lockdownRoleID);
-		await addUserToTheUserSchema(user, serverID, serverName);
+		await addServerToTheUserSchema(user, serverID, serverName);
 		await addUserToTheServerSchema(user, serverID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
-		const logChannelID = await getLogChannelIDFromDatbase(serverID);
+		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
 			if (logChannel) {
@@ -64,7 +64,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
-async function checkIfUserIsAlreadyLockedownInThatServer(serverID: string, user: User) {
+export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, user: User) {
 	const theUser = await Users.findOne({ id: user.id });
 	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
 		return false; // Nothing found in the DB
@@ -73,7 +73,7 @@ async function checkIfUserIsAlreadyLockedownInThatServer(serverID: string, user:
 	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
 }
 
-async function addUserToTheUserSchema(user: User, serverID: string, serverName: string) {
+async function addServerToTheUserSchema(user: User, serverID: string, serverName: string) {
 	try {
 		let theUser = await Users.findOne({ id: user.id });
 		if (!theUser) {
@@ -87,7 +87,7 @@ async function addUserToTheUserSchema(user: User, serverID: string, serverName: 
 		}
 	} catch (error) {
 		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
-        return null; 
+		throw error;
 	}
 }
 
@@ -125,18 +125,18 @@ async function addUserToTheServerSchema(user: User, serverID: string) {
 	try {
 		await Servers.findOneAndUpdate({id: serverID}, {$set: {"loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName}});
 	} catch (error) {
-		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID}) Here is the error message: `);
-		console.error(error);
+		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID})`, error);
+		throw error;
 	}
 }
 
-async function getLockdownRoleIDFromDatabase(serverID: string) {
+export async function getLockdownRoleIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
 	return theServer.serverConfig?.lockdownRoleID;
 }
 
-async function getLogChannelIDFromDatbase(serverID: string) {
+export async function getLogChannelIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
 	return theServer.serverConfig?.lockdownLogChannel;
