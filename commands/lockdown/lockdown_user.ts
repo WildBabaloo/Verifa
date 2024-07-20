@@ -47,7 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		await addUserToTheServerSchema(user, serverID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
-		const logChannelID = await getLogChannelIDFromDatbase(serverID);
+		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
 			if (logChannel) {
@@ -136,7 +136,7 @@ export async function getLockdownRoleIDFromDatabase(serverID: string) {
 	return theServer.serverConfig?.lockdownRoleID;
 }
 
-export async function getLogChannelIDFromDatbase(serverID: string) {
+export async function getLogChannelIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
 	return theServer.serverConfig?.lockdownLogChannel;
