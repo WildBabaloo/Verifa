@@ -58,7 +58,7 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
             lockdownConfig: {
                 lockdownRoleID: role.id,
                 lockdownLogChannel: null,
-                lockdownRoleAccess: null,
+                lockdownRoleAccess: [],
                 reason: "You are sus", // To make it custom later on
             }
         },

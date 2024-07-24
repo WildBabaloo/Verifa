@@ -7,7 +7,7 @@ const serverSchema = new Schema({
         lockdownConfig: {
             lockdownRoleID: String,
             lockdownLogChannel: String,
-            lockdownRoleAccess: String,
+            lockdownRoleAccess: [String],
             reason: String
         }
     },

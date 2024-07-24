@@ -54,7 +54,7 @@ function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string
             lockdownConfig: {
                 lockdownRoleID: null,
                 lockdownLogChannel: channel.id,
-                lockdownRoleAccess: null,
+                lockdownRoleAccess: [],
                 reason: "You are sus", // To make it custom later on
             }
         },
