@@ -37,7 +37,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownLogChannel": channel.id}});
+            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownConfig.lockdownLogChannel": channel.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its channel ${channel.name} (id: ${channel.id}) has been updated`);
         }
     } catch (error) {

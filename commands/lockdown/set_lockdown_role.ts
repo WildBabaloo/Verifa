@@ -41,7 +41,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownRoleID": role.id}});
+            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownConfig.lockdownRoleID": role.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been updated`);
         }
     } catch (error) {
