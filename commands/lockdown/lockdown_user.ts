@@ -35,7 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
-		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has not been set up. Please use another role instead`, ephemeral: true});
+		await interaction.reply({content: `Error! The lockdown role does not exist anymore or has not been set up. Please set up another role instead`, ephemeral: true});
 		return;
 	}
 
@@ -133,13 +133,13 @@ async function addUserToTheServerSchema(user: User, serverID: string) {
 export async function getLockdownRoleIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
-	return theServer.serverConfig?.lockdownRoleID;
+	return theServer.serverConfig?.lockdownConfig?.lockdownRoleID;
 }
 
 export async function getLogChannelIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
-	return theServer.serverConfig?.lockdownLogChannel;
+	return theServer.serverConfig?.lockdownConfig?.lockdownLogChannel;
 }
 
 function embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID: string, serverName: string): EmbedBuilder {

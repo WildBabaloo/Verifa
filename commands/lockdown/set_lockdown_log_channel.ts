@@ -24,8 +24,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
-    await addLogChannelToDatabase(channel, serverID, serverName);
-    await interaction.reply(`The ${channel.name} channel is now the new default log channel for lockdowns`);
+    try {
+        await addLogChannelToDatabase(channel, serverID, serverName);
+        await interaction.reply(`The ${channel.name} channel is now the new default log channel for lockdowns`);
+    } catch (error) {
+        await interaction.reply("Error with adding the channel onto our database.");
+        return;
+    }
+    
 }
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
@@ -37,12 +43,12 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownLogChannel": channel.id}});
+            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownConfig.lockdownLogChannel": channel.id}});
             console.log(`Server ${serverName} (id: ${serverID}) was found and its channel ${channel.name} (id: ${channel.id}) has been updated`);
         }
     } catch (error) {
         console.error(`Could not save the server ${serverID} under the name ${serverName} and/or channel ${channel.id} to the database`, error);
-        return null; 
+        throw error;
     }
 }
 
@@ -51,9 +57,12 @@ function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string
         id: serverID,
         name: serverName,
         serverConfig: {
-            lockdownRoleID: null,
-            lockdownLogChannel: channel.id,
-            reason: "You are sus", // To make it custom later on
+            lockdownConfig: {
+                lockdownRoleID: null,
+                lockdownLogChannel: channel.id,
+                lockdownRoleAccess: [],
+                reason: "You are sus", // To make it custom later on
+            }
         },
         loggedMembers: {
             globalBannedMembers: {

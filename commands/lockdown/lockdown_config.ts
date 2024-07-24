@@ -12,8 +12,8 @@ export async function execute(interaction: CommandInteraction) {
 		void interaction.reply({content: "This server has not configured its lockdown settings yet. You can do so with the /set_lockdown commands", });
 		return;
 	}
-	const lockdownRoleID = server?.serverConfig?.lockdownRoleID ?? "This value has not been set";
-	const lockdownLogChannelID = server?.serverConfig?.lockdownLogChannel ?? "This value has not been set";
+	const lockdownRoleID = server?.serverConfig?.lockdownConfig?.lockdownRoleID ?? "This value has not been set";
+	const lockdownLogChannelID = server?.serverConfig?.lockdownConfig?.lockdownLogChannel ?? "This value has not been set";
 	void interaction.reply({ embeds: [embedBuilder(lockdownRoleID, lockdownLogChannelID)] })
 }
 
