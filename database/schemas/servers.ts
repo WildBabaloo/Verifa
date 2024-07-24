@@ -4,9 +4,12 @@ const serverSchema = new Schema({
     id: String,
     name: String,
     serverConfig: {
-        lockdownRoleID: String,
-        lockdownLogChannel: String,
-        reason: String
+        lockdownConfig: {
+            lockdownRoleID: String,
+            lockdownLogChannel: String,
+            lockdownRoleAccess: String,
+            reason: String
+        }
     },
     loggedMembers: {
         globalBannedMembers: {
