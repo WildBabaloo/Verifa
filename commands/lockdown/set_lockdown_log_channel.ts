@@ -24,8 +24,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
-    await addLogChannelToDatabase(channel, serverID, serverName);
-    await interaction.reply(`The ${channel.name} channel is now the new default log channel for lockdowns`);
+    try {
+        await addLogChannelToDatabase(channel, serverID, serverName);
+        await interaction.reply(`The ${channel.name} channel is now the new default log channel for lockdowns`);
+    } catch (error) {
+        await interaction.reply("Error with adding the channel onto our database.");
+        return;
+    }
+    
 }
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
@@ -42,7 +48,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
         }
     } catch (error) {
         console.error(`Could not save the server ${serverID} under the name ${serverName} and/or channel ${channel.id} to the database`, error);
-        return null; 
+        throw error;
     }
 }
 

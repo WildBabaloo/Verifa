@@ -24,8 +24,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
-    await addRoleToDatabase(role, serverID, serverName);
-	await interaction.reply(`The role <@&${role.id}> has been set as the default lockdown role`);
+    try {
+        await addRoleToDatabase(role, serverID, serverName);
+        await interaction.reply(`The role <@&${role.id}> has been set as the default lockdown role`);
+    } catch (error) {
+        await interaction.reply("Error with adding the role onto our database.");
+        return;
+    }
 }
 
 export function isRole(role: Role | APIRole): role is Role {
@@ -46,7 +51,7 @@ async function addRoleToDatabase(role: Role, serverID: string, serverName: strin
         }
     } catch (error) {
         console.error(`Could not save the server ${serverID} under the name ${serverName} and/or role ${role.id} to the database`, error);
-        return null; 
+        throw error;
     }
 }
 

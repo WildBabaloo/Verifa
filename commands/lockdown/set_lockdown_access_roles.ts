@@ -29,7 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await addAccessRoleToTheDatabase(role, serverID, serverName);
         await interaction.reply(`The role <@&${role.id}> has been been added. People with this role can now use the lockdown commands`);
     } catch (error) {
-        await interaction.reply("Error with adding the role onto our database!");
+        await interaction.reply("Error with adding the role onto our database.");
         return;
     }
 }
