@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	await interaction.reply(`The role <@&${role.id}> has been set as the default lockdown role`);
 }
 
-function isRole(role: Role | APIRole): role is Role {
+export function isRole(role: Role | APIRole): role is Role {
     return (role as Role).id !== undefined;
 }
 
@@ -55,9 +55,12 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
         id: serverID,
         name: serverName,
         serverConfig: {
-            lockdownRoleID: role.id,
-            lockdownLogChannel: null,
-            reason: "You are sus", // To make it custom later on
+            lockdownConfig: {
+                lockdownRoleID: role.id,
+                lockdownLogChannel: null,
+                lockdownRoleAccess: null,
+                reason: "You are sus", // To make it custom later on
+            }
         },
         loggedMembers: {
             globalBannedMembers: {
