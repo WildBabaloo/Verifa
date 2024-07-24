@@ -4,7 +4,7 @@ import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
 	.setName('set_lockdown_access_role')
-	.setDescription('Add a role that will have access to the lockdown commands')
+	.setDescription('Add a role that will have access to the lockdown commands.')
     .addRoleOption(option => option.setName("role")
                         .setDescription("Enter the role")
                         .setRequired(true))
