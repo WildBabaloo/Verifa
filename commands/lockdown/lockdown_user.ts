@@ -35,7 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
 	if (!lockdownRoleID) {
-		await interaction.reply({content: `Error! The <@&${lockdownRoleID}> does not exist anymore or has not been set up. Please use another role instead`, ephemeral: true});
+		await interaction.reply({content: `Error! The lockdown role does not exist anymore or has not been set up. Please set up another role instead`, ephemeral: true});
 		return;
 	}
 
