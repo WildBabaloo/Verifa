@@ -133,13 +133,13 @@ async function addUserToTheServerSchema(user: User, serverID: string) {
 export async function getLockdownRoleIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
-	return theServer.serverConfig?.lockdownRoleID;
+	return theServer.serverConfig?.lockdownConfig?.lockdownRoleID;
 }
 
 export async function getLogChannelIDFromDatabase(serverID: string) {
 	const theServer = await Servers.findOne({ id: serverID });
 	if (!theServer) return null;
-	return theServer.serverConfig?.lockdownLogChannel;
+	return theServer.serverConfig?.lockdownConfig?.lockdownLogChannel;
 }
 
 function embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID: string, serverName: string): EmbedBuilder {
