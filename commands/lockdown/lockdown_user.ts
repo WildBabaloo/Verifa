@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder, TextChannel, PermissionsBitField } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
 
@@ -7,42 +7,51 @@ export const data = new SlashCommandBuilder()
 		.setDescription("Puts a user into lockdown mode")
 		.addUserOption(option => option.setName("user")
 							.setDescription("Enter the username of the person you would like to put into lockdown")
-							.setRequired(true));	
+							.setRequired(true));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-	const user = interaction.options.getUser("user");
-	if (!user) {
-		await interaction.reply({content: "Error! The user is invalid", ephemeral: true});
-		return;
-	}
-
-	const currentChannel = interaction.channel;
-	if (!currentChannel) { 
-		console.error("Interaction channel is null."); 
-		await interaction.reply({content: "Error processing this command due to an unknown error (Most likely of discord's part)", ephemeral: true});
-		return;
-	}
-
-    const serverID = interaction.guild?.id as string;
-    const serverName = interaction.guild?.name as string;
-	const moderator = interaction.user.id;
-	const userAvatar = user.avatarURL();
-	const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
-	if (alreadyLockdowned) {
-		await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
-		return;
-	}
-
-	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
-	if (!lockdownRoleID) {
-		await interaction.reply({content: `Error! The lockdown role does not exist anymore or has not been set up. Please set up another role instead`, ephemeral: true});
-		return;
-	}
-
-	// Giving user the lockdown role
 	try {
-        const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
-        await member.roles.add(lockdownRoleID);
+		const serverID = interaction.guild?.id as string;
+		const serverName = interaction.guild?.name as string;
+		const moderator = interaction.user.id;
+		const commandAuthor = interaction.member as GuildMember;
+		const memberCommandAuthor = await interaction.guild?.members.fetch(commandAuthor.id) as GuildMember;
+		const userHasLockdownAccessRoles = await checkIfUserHasOneOfTheAccessRoles(memberCommandAuthor, serverID);
+		console.log(userHasLockdownAccessRoles);
+		if (!isAdmin(commandAuthor) && !userHasLockdownAccessRoles) {
+			await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+			return;
+		}
+
+		const user = interaction.options.getUser("user");
+		if (!user) {
+			await interaction.reply({content: "Error! The user is invalid", ephemeral: true});
+			return;
+		}
+
+		const currentChannel = interaction.channel;
+		if (!currentChannel) { 
+			console.error("Interaction channel is null."); 
+			await interaction.reply({content: "Error processing this command due to an unknown error (Most likely of discord's part)", ephemeral: true});
+			return;
+		}
+
+		const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
+		if (alreadyLockdowned) {
+			await interaction.reply(`<@${user.id}> is already under lockdown in this server`); 
+			return;
+		}
+
+		const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
+		if (!lockdownRoleID) {
+			await interaction.reply({content: `Error! The lockdown role does not exist anymore or has not been set up. Please set up another role instead`, ephemeral: true});
+			return;
+		}
+
+		// Giving user the lockdown role
+		const userAvatar = user.avatarURL();
+        const toLockdownUser = await interaction.guild?.members.fetch(user.id) as GuildMember;
+        await toLockdownUser.roles.add(lockdownRoleID);
 		await addServerToTheUserSchema(user, serverID, serverName);
 		await addUserToTheServerSchema(user, serverID);
         await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
@@ -64,13 +73,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 }
 
+export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, serverID: string): Promise<boolean> {
+    const memberRoles = member.roles.cache.map(role => role.id);
+    const theServer = await Servers.findOne({ id: serverID });
+    const theServerRoleAccess = theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess;
+	console.log(theServerRoleAccess);
+	console.log(memberRoles);
+    return theServerRoleAccess ? theServerRoleAccess.some(roleAccess => memberRoles.includes(roleAccess)) : false;
+}
+
 export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, user: User) {
-	const theUser = await Users.findOne({ id: user.id });
+	const theUser = await Users.findOne({id: user.id});
 	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
 		return false; // Nothing found in the DB
 	}
 
 	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
+}
+
+function isAdmin(member: GuildMember): boolean {
+    return member.permissions.has(PermissionsBitField.Flags.Administrator);
 }
 
 async function addServerToTheUserSchema(user: User, serverID: string, serverName: string) {
