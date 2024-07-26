@@ -4,7 +4,7 @@ import { Users } from '../../database/schemas/users';
 import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './lockdown_user';
 
 export const data = new SlashCommandBuilder()
-		.setName("unlock_user")
+		.setName("unlock")
 		.setDescription("Removes the lockdown role from a user that is currently under lockdown")
         .addUserOption(option => option.setName("user")
                             .setDescription("Enter the username of the person you would like to remove from its lockdown state")
