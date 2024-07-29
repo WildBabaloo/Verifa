@@ -19,7 +19,7 @@ export async function execute(interaction: CommandInteraction) {
 	?  `<#${server.serverConfig.lockdownConfig.lockdownLogChannel}>`
 	: "This value has not been set";
 	const lockdownRoleAccessIDs = server?.serverConfig?.lockdownConfig?.lockdownRoleAccess ?? [];
-	const lockdownRoleAccessMentions = lockdownRoleAccessIDs.length > 0 ? lockdownRoleAccessIDs.map((id: string) => `<@&${id}>`).join(", ") : "No additional roles added yet. *(Note: Roles with the ban permission enabled already have access by default)";
+	const lockdownRoleAccessMentions = lockdownRoleAccessIDs.length > 0 ? lockdownRoleAccessIDs.map((id: string) => `<@&${id}>`).join(", ") : "No additional roles has been added yet.";
 	void interaction.reply({ embeds: [embedBuilder(lockdownRoleID, lockdownLogChannelID, lockdownRoleAccessMentions)] })
 }
 
