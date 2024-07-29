@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverName = interaction.guild?.name as string;
     try {
         await removeAccessRoleFromTheDatabase(role, serverID, serverName);
-        await interaction.reply(`The role <@&${role.id}> has been been revoked access from using the lockdown commands.`);
+        await interaction.reply(`The role <@&${role.id}> has been revoked access from using the lockdown commands.`);
     } catch (error) {
         await interaction.reply("Error with removing the role from our database.");
         return;
