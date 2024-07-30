@@ -26,12 +26,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     try {
+        const isAccessRoleInServerSchema = await checkIfAccessRoleIsAlreadyInTheServerSchema(role, serverID);
+        if (isAccessRoleInServerSchema) {
+            await interaction.reply({content: `<@&${role.id}> already has access to the lockdown commands`, ephemeral: true});
+            return;
+        }
         await addAccessRoleToTheDatabase(role, serverID, serverName);
         await interaction.reply(`The role <@&${role.id}> has been been added. People with this role can now use the lockdown commands`);
     } catch (error) {
         await interaction.reply("Error with adding the role onto our database.");
         return;
     }
+}
+
+export async function checkIfAccessRoleIsAlreadyInTheServerSchema(role: Role, serverID: string) {
+    const theServer = await Servers.findOne({id: serverID});
+    if (theServer) {
+        return theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess.includes(role.id);
+    }
+
+    return false;
 }
 
 async function addAccessRoleToTheDatabase(role: Role, serverID: string, serverName: string) {
