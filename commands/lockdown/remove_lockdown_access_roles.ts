@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Role, PermissionsBitField, GuildMember } from 'discord.js';
 import { isRole } from './set_lockdown_role';
+import { checkIfAccessRoleIsAlreadyInTheServerSchema } from './set_lockdown_access_roles';
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
@@ -27,6 +28,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     try {
+        const isAccessRoleInServerSchema = await checkIfAccessRoleIsAlreadyInTheServerSchema(role, serverID);
+        if (!isAccessRoleInServerSchema) {
+            await interaction.reply({content: `<@&${role.id}> already does not have access to the lockdown commands so it cant be removed.`, ephemeral: true});
+            return;
+        }
         await removeAccessRoleFromTheDatabase(role, serverID, serverName);
         await interaction.reply(`The role <@&${role.id}> has been revoked access from using the lockdown commands.`);
     } catch (error) {
