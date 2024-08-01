@@ -7,18 +7,18 @@ import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase }
 // Connection to the database
 const database = process.env.MONGO_DB;
 if (!database) {
-    console.error("Database URL is not set in environment variables.");
-    process.exit(1);
+	console.error("Database URL is not set in environment variables.");
+	process.exit(1);
 }
 
 async function connectToDatabase() {
-    try {
-        await mongoose.connect(database as string);
-        console.log("Connected to the database");
-    } catch (error) {
-        console.error("Could not connect to the database", error);
-        process.exit(1); 
-    }
+	try {
+		await mongoose.connect(database as string);
+		console.log("Connected to the database");
+	} catch (error) {
+		console.error("Could not connect to the database", error);
+		process.exit(1);
+	}
 }
 
 await connectToDatabase();
@@ -39,10 +39,11 @@ interface Command {
 	execute: (interaction: Interaction) => Promise<void>;
 }
 
-const client = new Client({ intents: [
-	GatewayIntentBits.Guilds,
-	GatewayIntentBits.GuildMembers,
-	] 
+const client = new Client({
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
+	]
 });
 
 client.commands = new Collection<string, Command>();
@@ -91,34 +92,43 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 });
 
 client.on("guildMemberAdd", async member => {
-	if (member) {
-		const serverID = member.guild.id;
-		console.log(`${member.displayName} has joined the server`);
-		const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
-		const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
-		if (isUnderLockdown && lockdownRoleID) {
-			member.roles.add(lockdownRoleID);
-			const logChannelID = await getLockdownRoleIDFromDatabase(serverID);	
-			if (logChannelID) {
-				const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
-				if (logChannel?.isTextBased()) {
-					logChannel.send({embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(member.id, member.displayName, member.avatarURL())]});
-				}
-			}	
+	const serverID = member.guild.id;
+	const serverName = member.guild.name;
+	const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
+	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
+	if (isUnderLockdown && lockdownRoleID) {
+		await member.roles.add(lockdownRoleID);
+		console.log(`${member.displayName} has joined the server and they are under lockdown`);
+		await member.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID, serverName)] });
+		const logChannelID = await getLockdownRoleIDFromDatabase(serverID);
+		if (logChannelID) {
+			const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
+			if (logChannel?.isTextBased()) {
+				logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(member.id, member.displayName, member.avatarURL())] });
+			}
 		}
 	}
 });
 
 function embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID: string, username: string, userAvatar: string | null): EmbedBuilder {
 	return new EmbedBuilder()
-	.setColor(0xFFE900)
-	.setThumbnail(userAvatar)
-	.setTitle(`User who has rejoined the server is now under lockdown | ${username}`)
-	.addFields(
-		{ name: 'User', value: `<@${userID}>`, inline: true },
-	)
-	.setFooter({ text: `ID: ${userID}` })
-	.setTimestamp()
+		.setColor(0xFFE900)
+		.setThumbnail(userAvatar)
+		.setTitle(`User who has rejoined the server is now under lockdown | ${username}`)
+		.addFields(
+			{ name: 'User', value: `<@${userID}>`, inline: true },
+		)
+		.setFooter({ text: `ID: ${userID}` })
+		.setTimestamp()
+}
+
+function embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID: string, serverName: string): EmbedBuilder {
+	// TODO customizable title and description (found in ticket 35)
+	return new EmbedBuilder()
+		.setColor(0xE10600)
+		.setTitle(`You have joined a server that you were previously lockdowned in ${serverName}`)
+		.setDescription(`You have been deemed suspicious by the server owners and mods and are currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
+		.setTimestamp();
 }
 
 client.once(Events.ClientReady, (c) => {
