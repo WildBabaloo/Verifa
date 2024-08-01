@@ -113,10 +113,9 @@ function embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(u
 	return new EmbedBuilder()
 	.setColor(0xFFE900)
 	.setThumbnail(userAvatar)
-	.setTitle(`User Under Lockdown | ${username}`)
+	.setTitle(`User who has rejoined the server is now under lockdown | ${username}`)
 	.addFields(
 		{ name: 'User', value: `<@${userID}>`, inline: true },
-		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true }
 	)
 	.setFooter({ text: `ID: ${userID}` })
 	.setTimestamp()
