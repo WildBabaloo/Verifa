@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Client, Collection, Events, GatewayIntentBits, TextChannel, type Interaction, EmbedBuilder } from 'discord.js';
 import * as mongoose from "mongoose";
-import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase } from './commands/lockdown/lockdown_user';
+import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './commands/lockdown/lockdown_user';
 
 // Connection to the database
 const database = process.env.MONGO_DB;
@@ -100,7 +100,7 @@ client.on("guildMemberAdd", async member => {
 		await member.roles.add(lockdownRoleID);
 		console.log(`${member.displayName} has joined the server and they are under lockdown`);
 		await member.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID, serverName)] });
-		const logChannelID = await getLockdownRoleIDFromDatabase(serverID);
+		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
 			if (logChannel?.isTextBased()) {

@@ -77,8 +77,6 @@ export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, ser
     const memberRoles = member.roles.cache.map(role => role.id);
     const theServer = await Servers.findOne({ id: serverID });
     const theServerRoleAccess = theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess;
-	console.log(theServerRoleAccess);
-	console.log(memberRoles);
     return theServerRoleAccess ? theServerRoleAccess.some(roleAccess => memberRoles.includes(roleAccess)) : false;
 }
 
