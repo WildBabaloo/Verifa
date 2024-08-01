@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, Events, GatewayIntentBits, type Interaction } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, TextChannel, type Interaction, EmbedBuilder } from 'discord.js';
 import * as mongoose from "mongoose";
+import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase } from './commands/lockdown/lockdown_user';
 
 // Connection to the database
 const database = process.env.MONGO_DB;
@@ -88,6 +89,38 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 		}
 	}
 });
+
+client.on("guildMemberAdd", async member => {
+	if (member) {
+		const serverID = member.guild.id;
+		console.log(`${member.displayName} has joined the server`);
+		const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
+		const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
+		if (isUnderLockdown && lockdownRoleID) {
+			member.roles.add(lockdownRoleID);
+			const logChannelID = await getLockdownRoleIDFromDatabase(serverID);	
+			if (logChannelID) {
+				const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
+				if (logChannel?.isTextBased()) {
+					logChannel.send({embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(member.id, member.displayName, member.avatarURL())]});
+				}
+			}	
+		}
+	}
+});
+
+function embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID: string, username: string, userAvatar: string | null): EmbedBuilder {
+	return new EmbedBuilder()
+	.setColor(0xFFE900)
+	.setThumbnail(userAvatar)
+	.setTitle(`User Under Lockdown | ${username}`)
+	.addFields(
+		{ name: 'User', value: `<@${userID}>`, inline: true },
+		{ name: 'Moderator', value: `<@${moderatorID}>`, inline: true }
+	)
+	.setFooter({ text: `ID: ${userID}` })
+	.setTimestamp()
+}
 
 client.once(Events.ClientReady, (c) => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);

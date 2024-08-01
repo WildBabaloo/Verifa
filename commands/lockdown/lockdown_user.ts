@@ -82,7 +82,7 @@ export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, ser
     return theServerRoleAccess ? theServerRoleAccess.some(roleAccess => memberRoles.includes(roleAccess)) : false;
 }
 
-export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, user: User) {
+export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, user: User | GuildMember) {
 	const theUser = await Users.findOne({id: user.id});
 	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
 		return false; // Nothing found in the DB
