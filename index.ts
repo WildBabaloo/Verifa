@@ -1,23 +1,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, Events, GatewayIntentBits, type Interaction } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, TextChannel, type Interaction, EmbedBuilder } from 'discord.js';
 import * as mongoose from "mongoose";
+import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './commands/lockdown/lockdown_user';
 
 // Connection to the database
 const database = process.env.MONGO_DB;
 if (!database) {
-    console.error("Database URL is not set in environment variables.");
-    process.exit(1);
+	console.error("Database URL is not set in environment variables.");
+	process.exit(1);
 }
 
 async function connectToDatabase() {
-    try {
-        await mongoose.connect(database as string);
-        console.log("Connected to the database");
-    } catch (error) {
-        console.error("Could not connect to the database", error);
-        process.exit(1); 
-    }
+	try {
+		await mongoose.connect(database as string);
+		console.log("Connected to the database");
+	} catch (error) {
+		console.error("Could not connect to the database", error);
+		process.exit(1);
+	}
 }
 
 await connectToDatabase();
@@ -38,10 +39,11 @@ interface Command {
 	execute: (interaction: Interaction) => Promise<void>;
 }
 
-const client = new Client({ intents: [
-	GatewayIntentBits.Guilds,
-	GatewayIntentBits.GuildMembers,
-	] 
+const client = new Client({
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
+	]
 });
 
 client.commands = new Collection<string, Command>();
@@ -88,6 +90,47 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 		}
 	}
 });
+
+client.on("guildMemberAdd", async member => {
+	const serverID = member.guild.id;
+	const serverName = member.guild.name;
+	const userID = member.user.id;
+	const username = member.user.globalName;
+	const userAvatar = member.user.avatarURL();
+	const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
+	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
+	if (isUnderLockdown && lockdownRoleID && username) {
+		await member.roles.add(lockdownRoleID);
+		console.log(`${username} (ID: ${userID}) has joined the server and they are under lockdown`);
+		await member.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID, serverName)] });
+		const logChannelID = await getLogChannelIDFromDatabase(serverID);
+		if (logChannelID) {
+			const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
+			if (logChannel?.isTextBased()) {
+				logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID, username, userAvatar)] });
+			}
+		}
+	}
+});
+
+function embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID: string, username: string, userAvatar: string | null): EmbedBuilder {
+	return new EmbedBuilder()
+		.setColor(0xFFA500)
+		.setThumbnail(userAvatar)
+		.setTitle(`User under lockdown | ${username} `)
+		.setDescription(`Note: The user <@${userID}> was previously lockdowned in this server has now rejoined it. They have been placed into lockdown and given the lockdown role.`)
+		.setFooter({ text: `ID: ${userID}` })
+		.setTimestamp()
+}
+
+function embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID: string, serverName: string): EmbedBuilder {
+	// TODO customizable title and description (found in ticket 35)
+	return new EmbedBuilder()
+		.setColor(0xE10600)
+		.setTitle(`You have joined a server that you were previously lockdowned in ${serverName}`)
+		.setDescription(`You have been deemed suspicious by the server owners and mods and are currently under lockdown from viewing the server's content. Please contact an admin or mod to get it sorted out`)
+		.setTimestamp();
+}
 
 client.once(Events.ClientReady, (c) => {
 	console.log(`Ready! Logged in as ${c.user.tag}`);
