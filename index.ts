@@ -94,17 +94,20 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 client.on("guildMemberAdd", async member => {
 	const serverID = member.guild.id;
 	const serverName = member.guild.name;
+	const userID = member.user.id;
+	const username = member.user.globalName;
+	const userAvatar = member.user.avatarURL();
 	const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
-	if (isUnderLockdown && lockdownRoleID) {
+	if (isUnderLockdown && lockdownRoleID && username) {
 		await member.roles.add(lockdownRoleID);
-		console.log(`${member.displayName} has joined the server and they are under lockdown`);
+		console.log(`${username} (ID: ${userID}) has joined the server and they are under lockdown`);
 		await member.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = member.guild.channels.cache.get(logChannelID) as TextChannel | undefined;
 			if (logChannel?.isTextBased()) {
-				logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(member.id, member.displayName, member.avatarURL())] });
+				logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID, username, userAvatar)] });
 			}
 		}
 	}
@@ -112,12 +115,10 @@ client.on("guildMemberAdd", async member => {
 
 function embedBuilderForLogChannelWhenUserHasBeenLockedDownAndRejoinsTheServer(userID: string, username: string, userAvatar: string | null): EmbedBuilder {
 	return new EmbedBuilder()
-		.setColor(0xFFE900)
+		.setColor(0xFFA500)
 		.setThumbnail(userAvatar)
-		.setTitle(`User who has rejoined the server is now under lockdown | ${username}`)
-		.addFields(
-			{ name: 'User', value: `<@${userID}>`, inline: true },
-		)
+		.setTitle(`User under lockdown | ${username} `)
+		.setDescription(`Note: The user <@${userID}> was previously lockdowned in this server has now rejoined it. They have been placed into lockdown and given the lockdown role.`)
 		.setFooter({ text: `ID: ${userID}` })
 		.setTimestamp()
 }
