@@ -15,15 +15,17 @@ export async function execute(interaction: CommandInteraction) {
         await interaction.reply("There are currently no users under lockdown");
         return;
     }
-    await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownedMembersReasons)] });
-}
+    // await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownedMembersReasons)] });
+    await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs)] });
+}   
 
 async function grabAllLockdownUsersIDFromTheDatabase(serverID: string) {
     const theServer = await Servers.findOne({ id: serverID });
     return theServer?.loggedMembers?.lockdownedMembers;
 }
 
-function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[], lockdownedMembersReasons: string[]) {
+// function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[], lockdownedMembersReasons: string[]) {
+function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[]) {
     return new EmbedBuilder()
         .setTitle("List of all the current lockdowned members in the server")
         .addFields(
@@ -33,4 +35,3 @@ function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs:
         )
         .setTimestamp()
 }
-
