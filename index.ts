@@ -95,11 +95,11 @@ client.on("guildMemberAdd", async member => {
 	const serverID = member.guild.id;
 	const serverName = member.guild.name;
 	const userID = member.user.id;
-	const username = member.user.globalName;
+	const username = member.user.globalName as string;
 	const userAvatar = member.user.avatarURL();
 	const isUnderLockdown = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
 	const lockdownRoleID = await getLockdownRoleIDFromDatabase(serverID);
-	if (isUnderLockdown && lockdownRoleID && username) {
+	if (isUnderLockdown && lockdownRoleID) {
 		await member.roles.add(lockdownRoleID);
 		console.log(`${username} (ID: ${userID}) has joined the server and they are under lockdown`);
 		await member.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDownOnceTheyRejoinAServer(serverID, serverName)] });
