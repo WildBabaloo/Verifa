@@ -35,6 +35,9 @@ async function embedBuilderForUserInfo(serverID: string, member: GuildMember) {
 		.addFields(
 			{ name: `Roles [${member.roles.cache.size - 1}]`, value:  displayAllUserRoles(member, serverID)}
 		)
+		.addFields(
+			{ name: "Key Permissions", value: displayKeyUserPermissions(member) }
+		)
 		.addFields( 
 			{ name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" }
 		 )
@@ -52,4 +55,42 @@ function displayAllUserRoles(member: GuildMember, serverID: string) {
 	if (roles == '' || roles == "") { return "This user has no roles attributed to them" }
 
 	return roles;
+}
+
+function displayKeyUserPermissions(member: GuildMember) {
+	const moderatorPermissionsArray = [
+		"KickMembers", 
+		"BanMembers", 
+		"Administrator", 
+		"ManageChannels", 
+		"ManageGuild", 
+		"ViewAuditLog", 
+		"ManageMessages", 
+		"MentionEveryone", 
+		"ViewGuildInsights", 
+		"MuteMembers", 
+		"DeafenMembers",
+  		"MoveMembers",
+		"ManageNicknames",
+		"ManageRoles", 
+		"ManageWebhooks",
+		"ManageEmojisAndStickers",
+		"ManageGuildExpressions",
+		"ManageEvents", 
+		"ManageThreads",
+		"ModerateMembers"
+
+	];
+	
+	const moderatorPermissions = member.permissions.toArray()
+		.filter(perm => moderatorPermissionsArray.includes(perm));
+	const formattedModeratorPermissions = moderatorPermissions.map(perm => {
+        return perm
+            .replace(/([A-Z])/g, ' $1') 
+            .replace(/^./, str => str.toUpperCase());
+    }).join(',');
+
+	if (formattedModeratorPermissions == '' || formattedModeratorPermissions == "") { return "This user has no key moderator permissions in the server" }
+
+	return formattedModeratorPermissions;
 }
