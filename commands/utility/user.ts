@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, EmbedBuilder, User } from 'discord.js';
+import { checkIfUserIsUnderLockdownInThatServer } from '../lockdown/lockdown_user';
 
 export const data = new SlashCommandBuilder()
 		.setName('userinfo')
@@ -18,10 +19,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 		const user = interaction.options.getUser("user");
 		const member = user instanceof User ? await interaction.guild.members.fetch(user) : interaction.member;
-		await interaction.reply({embeds: [embedBuilderForUserInfo(member)]});
+		const serverID = interaction.guild.id;
+		await interaction.reply({embeds: [await embedBuilderForUserInfo(serverID, member)]});
 }
 
-function embedBuilderForUserInfo(member: GuildMember) {
+async function embedBuilderForUserInfo(serverID: string, member: GuildMember) {
 	return new EmbedBuilder()
 		.setTitle(member.user.username)
 		.setThumbnail(member.user.avatarURL())
@@ -30,5 +32,24 @@ function embedBuilderForUserInfo(member: GuildMember) {
 			{ name: "Joined", value: member.joinedAt?.toDateString() ?? "An Unknown Date", inline: true },
 			{ name: "Registered", value: member.user.createdAt.toDateString() ?? "An Unknown Date", inline: true }
 		)
+		.addFields(
+			{ name: `Roles [${member.roles.cache.size - 1}]`, value:  displayAllUserRoles(member, serverID)}
+		)
+		.addFields( 
+			{ name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" }
+		 )
+		 .addFields(
+			{ name: "Warnings", value: "WIP" }
+		 )
 		.setTimestamp()
+}
+
+function displayAllUserRoles(member: GuildMember, serverID: string) {
+	const roles = member.roles.cache
+		.filter(role => role.id !== serverID)
+		.map(role => role.toString())
+		.join(", ");	
+	if (roles == '' || roles == "") { return "This user has no roles attributed to them" }
+
+	return roles;
 }
