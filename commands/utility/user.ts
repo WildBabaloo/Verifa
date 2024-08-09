@@ -26,6 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 async function embedBuilderForUserInfo(serverID: string, member: GuildMember) {
 	return new EmbedBuilder()
 		.setTitle(member.user.username)
+		.setColor(0xFEF85B)
 		.setThumbnail(member.user.avatarURL())
 		.setDescription(`<@${member.id}>`)
 		.addFields(
