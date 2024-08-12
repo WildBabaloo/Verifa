@@ -60,6 +60,7 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
         id: serverID,
         name: serverName,
         serverConfig: {
+            managerRoleIDs: [],
             lockdownConfig: {
                 lockdownRoleID: role.id,
                 lockdownLogChannel: null,

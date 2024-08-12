@@ -71,6 +71,7 @@ function makeNewServerDocumentWithAccessRole(role: Role, serverID: string, serve
         id: serverID,
         name: serverName,
         serverConfig: {
+            managerRoleIDs: [],
             lockdownConfig: {
                 lockdownRoleID: null,
                 lockdownLogChannel: null,

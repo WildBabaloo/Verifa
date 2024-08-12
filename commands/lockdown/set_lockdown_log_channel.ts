@@ -57,6 +57,7 @@ function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string
         id: serverID,
         name: serverName,
         serverConfig: {
+            managerRoleIDs: [],
             lockdownConfig: {
                 lockdownRoleID: null,
                 lockdownLogChannel: channel.id,
