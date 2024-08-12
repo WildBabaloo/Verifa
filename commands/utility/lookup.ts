@@ -17,6 +17,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
+    // TODO: AFTER TICKER 65 IS DONE IS TO RESTRICT IT TO MANAGER ROLES ONLY
+
     const user = interaction.options.getUser("user");
     const member = user instanceof User ? await interaction.guild.members.fetch(user) : interaction.member;
     const serverID = interaction.guild.id;
