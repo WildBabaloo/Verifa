@@ -3,7 +3,7 @@ import { checkIfUserIsUnderLockdownInThatServer } from '../lockdown/lockdown_use
 
 export const data = new SlashCommandBuilder()
 	.setName('lookup')
-	.setDescription('Provides additional information about the user mentioned which can only be accessed by certain roles.')
+	.setDescription('Provides additional information about the user mentioned.')
 	.addUserOption(option => option.setName("user")
 		.setDescription("Enter the user you would like to lookup"));
 
