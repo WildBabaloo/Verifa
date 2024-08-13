@@ -5,8 +5,8 @@ export const data = new SlashCommandBuilder()
     .setName("set_lockdown_log_channel")
     .setDescription("Configure the log channel when the user is in lockdown and when they get out")
     .addChannelOption(option => option.setName("channel")
-                            .setDescription("Enter a channel for the logs")
-                            .setRequired(true))
+        .setDescription("Enter a channel for the logs")
+        .setRequired(true))
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const channel = interaction.options.getChannel("channel");
     if (!(channel instanceof TextChannel)) {
-        await interaction.reply({content: "Error! The channel must be a text channel!", ephemeral: true});
+        await interaction.reply({ content: "Error! The channel must be a text channel!", ephemeral: true });
         return;
     }
 
@@ -31,7 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await interaction.reply("Error with adding the channel onto our database.");
         return;
     }
-    
+
 }
 
 async function addLogChannelToDatabase(channel: TextChannel, serverID: string, serverName: string) {
@@ -43,7 +43,7 @@ async function addLogChannelToDatabase(channel: TextChannel, serverID: string, s
             await server.save();
             console.log(`The ${channel.name} channel for the server called ${serverName} has been saved to the database`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownConfig.lockdownLogChannel": channel.id}});
+            await Servers.findOneAndUpdate({ id: serverID }, { $set: { "serverConfig.lockdownConfig.lockdownLogChannel": channel.id } });
             console.log(`Server ${serverName} (id: ${serverID}) was found and its channel ${channel.name} (id: ${channel.id}) has been updated`);
         }
     } catch (error) {

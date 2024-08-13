@@ -4,11 +4,11 @@ import { checkIfAccessRoleIsAlreadyInTheServerSchema } from './set_lockdown_acce
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
-	.setName('remove_lockdown_access_role')
-	.setDescription('Remove a role that currently has access to the lockdown commands.')
+    .setName('remove_lockdown_access_role')
+    .setDescription('Remove a role that currently has access to the lockdown commands.')
     .addRoleOption(option => option.setName("role")
-                        .setDescription("Enter the role")
-                        .setRequired(true))
+        .setDescription("Enter the role")
+        .setRequired(true))
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -21,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const role = interaction.options.getRole("role");
 
     if (!role || !isRole(role)) {
-        await interaction.reply({content: "This is not a valid role", ephemeral: true});
+        await interaction.reply({ content: "This is not a valid role", ephemeral: true });
         return;
     }
 
@@ -30,7 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         const isAccessRoleInServerSchema = await checkIfAccessRoleIsAlreadyInTheServerSchema(role, serverID);
         if (!isAccessRoleInServerSchema) {
-            await interaction.reply({content: `<@&${role.id}> already does not have access to the lockdown commands so it cant be removed.`, ephemeral: true});
+            await interaction.reply({ content: `<@&${role.id}> already does not have access to the lockdown commands so it cant be removed.`, ephemeral: true });
             return;
         }
         await removeAccessRoleFromTheDatabase(role, serverID, serverName);
@@ -43,7 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 async function removeAccessRoleFromTheDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        await Servers.findOneAndUpdate({id: serverID}, {$pull: {"serverConfig.lockdownConfig.lockdownRoleAccess": role.id}});
+        await Servers.findOneAndUpdate({ id: serverID }, { $pull: { "serverConfig.lockdownConfig.lockdownRoleAccess": role.id } });
         console.log(`Access for the role ${role.id} from the server ${serverName} (ID: ${serverID}) has now been revoked`);
     } catch (error) {
         console.error(`Error removing access role in ${serverName} (ID: ${serverID}) for the role under the ID of ${role.id}`, error);

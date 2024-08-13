@@ -2,8 +2,8 @@ import { SlashCommandBuilder, CommandInteraction, EmbedBuilder } from 'discord.j
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
-	.setName('view_all_users_under_lockdown')
-	.setDescription('A list to view all users who are currently under lockdown');
+    .setName('view_all_users_under_lockdown')
+    .setDescription('A list to view all users who are currently under lockdown');
 
 export async function execute(interaction: CommandInteraction) {
     const serverID = interaction.guild?.id as string;
@@ -17,7 +17,7 @@ export async function execute(interaction: CommandInteraction) {
     }
     // await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownedMembersReasons)] });
     await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs)] });
-}   
+}
 
 async function grabAllLockdownUsersIDFromTheDatabase(serverID: string) {
     const theServer = await Servers.findOne({ id: serverID });

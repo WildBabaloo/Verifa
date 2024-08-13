@@ -3,11 +3,11 @@ import { Servers } from '../../database/schemas/servers';
 import { isRole } from '../lockdown/set_lockdown_role';
 
 export const data = new SlashCommandBuilder()
-	.setName('addManagerRole')
-	.setDescription('Add a role to the list of server managers/moderators')
+    .setName('addManagerRole')
+    .setDescription('Add a role to the list of server managers/moderators')
     .addRoleOption(option => option.setName("role")
-                        .setDescription("Enter the role")
-                        .setRequired(true))
+        .setDescription("Enter the role")
+        .setRequired(true))
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -19,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.reply({content: "This is not a valid role", ephemeral: true});
+        await interaction.reply({ content: "This is not a valid role", ephemeral: true });
         return;
     }
 
@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         const isManagerRoleInServerSchema = await checkIfManagerRoleIsAlreadyInTheServerSchema(role, serverID);
         if (isManagerRoleInServerSchema) {
-            await interaction.reply({content: `<@&${role.id}> is already part of the manager roles`, ephemeral: true})
+            await interaction.reply({ content: `<@&${role.id}> is already part of the manager roles`, ephemeral: true })
             return;
         }
         await addManagerRoleToTheDatabase(role, serverID, serverName);
@@ -41,8 +41,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function checkIfManagerRoleIsAlreadyInTheServerSchema(role: Role, serverID: string) {
-    const theServer = await Servers.findOne({id: serverID});
-    if (theServer) { 
+    const theServer = await Servers.findOne({ id: serverID });
+    if (theServer) {
         return theServer.serverConfig?.managerRoleIDs.includes(role.id);
     }
 
@@ -51,14 +51,14 @@ export async function checkIfManagerRoleIsAlreadyInTheServerSchema(role: Role, s
 
 async function addManagerRoleToTheDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        let theServer = await Servers.findOne({id: serverID});
+        let theServer = await Servers.findOne({ id: serverID });
         if (!theServer) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             theServer = makeNewServerDocumentWithManagerRole(role, serverID, serverName);
             await theServer.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database as a new role that is now part of the list of managers for that server`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$push: {"serverConfig.managerRoleIDs": role.id}});
+            await Servers.findOneAndUpdate({ id: serverID }, { $push: { "serverConfig.managerRoleIDs": role.id } });
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has now been added to the list of managers`);
         }
     } catch (error) {

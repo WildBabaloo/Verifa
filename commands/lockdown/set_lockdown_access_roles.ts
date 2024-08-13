@@ -3,11 +3,11 @@ import { isRole } from './set_lockdown_role';
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
-	.setName('set_lockdown_access_role')
-	.setDescription('Add a role that will have access to the lockdown commands.')
+    .setName('set_lockdown_access_role')
+    .setDescription('Add a role that will have access to the lockdown commands.')
     .addRoleOption(option => option.setName("role")
-                        .setDescription("Enter the role")
-                        .setRequired(true))
+        .setDescription("Enter the role")
+        .setRequired(true))
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -19,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.reply({content: "This is not a valid role", ephemeral: true});
+        await interaction.reply({ content: "This is not a valid role", ephemeral: true });
         return;
     }
 
@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     try {
         const isAccessRoleInServerSchema = await checkIfAccessRoleIsAlreadyInTheServerSchema(role, serverID);
         if (isAccessRoleInServerSchema) {
-            await interaction.reply({content: `<@&${role.id}> already has access to the lockdown commands`, ephemeral: true});
+            await interaction.reply({ content: `<@&${role.id}> already has access to the lockdown commands`, ephemeral: true });
             return;
         }
         await addAccessRoleToTheDatabase(role, serverID, serverName);
@@ -40,7 +40,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function checkIfAccessRoleIsAlreadyInTheServerSchema(role: Role, serverID: string) {
-    const theServer = await Servers.findOne({id: serverID});
+    const theServer = await Servers.findOne({ id: serverID });
     if (theServer) {
         return theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess.includes(role.id);
     }
@@ -50,14 +50,14 @@ export async function checkIfAccessRoleIsAlreadyInTheServerSchema(role: Role, se
 
 async function addAccessRoleToTheDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        let server = await Servers.findOne({id: serverID})
+        let server = await Servers.findOne({ id: serverID })
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             server = makeNewServerDocumentWithAccessRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database as a new role that has access to lockdown commands`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$push: {"serverConfig.lockdownConfig.lockdownRoleAccess": role.id}});
+            await Servers.findOneAndUpdate({ id: serverID }, { $push: { "serverConfig.lockdownConfig.lockdownRoleAccess": role.id } });
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been added to the access roles for the lockdown commands`);
         }
     } catch (error) {

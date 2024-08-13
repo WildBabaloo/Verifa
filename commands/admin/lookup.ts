@@ -2,29 +2,29 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, EmbedBui
 import { checkIfUserIsUnderLockdownInThatServer } from '../lockdown/lockdown_user';
 
 export const data = new SlashCommandBuilder()
-		.setName('lookup')
-		.setDescription('Provides additional information about the user mentioned which can only be accessed by certain roles.')
-		.addUserOption(option => option.setName("user")
-								.setDescription("Enter the user you would like to lookup"));
+	.setName('lookup')
+	.setDescription('Provides additional information about the user mentioned which can only be accessed by certain roles.')
+	.addUserOption(option => option.setName("user")
+		.setDescription("Enter the user you would like to lookup"));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    if (!interaction.guild) {
-        await interaction.reply("This command can only be used in a server.");
-        return;
-    }
-    if (!interaction.member || !(interaction.member instanceof GuildMember)) {
-        await interaction.reply("This command can only be done by a member.");
-        return;
-    }
+	if (!interaction.guild) {
+		await interaction.reply("This command can only be used in a server.");
+		return;
+	}
+	if (!interaction.member || !(interaction.member instanceof GuildMember)) {
+		await interaction.reply("This command can only be done by a member.");
+		return;
+	}
 
-    // TODO: AFTER TICKER 65 IS DONE IS TO RESTRICT IT TO MANAGER ROLES ONLY
+	// TODO: AFTER TICKER 65 IS DONE IS TO RESTRICT IT TO MANAGER ROLES ONLY
 
-    const user = interaction.options.getUser("user");
-    const member = user instanceof User ? await interaction.guild.members.fetch(user) : interaction.member;
-    const serverID = interaction.guild.id;
-    await interaction.reply({ embeds: [await embedBuilderForLookupUser(serverID, member)] });
+	const user = interaction.options.getUser("user");
+	const member = user instanceof User ? await interaction.guild.members.fetch(user) : interaction.member;
+	const serverID = interaction.guild.id;
+	await interaction.reply({ embeds: [await embedBuilderForLookupUser(serverID, member)] });
 
-    // Then post embeds of global bans, warns or notes when the number of it is above 0. (Will make embeds later)
+	// Then post embeds of global bans, warns or notes when the number of it is above 0. (Will make embeds later)
 }
 
 async function embedBuilderForLookupUser(serverID: string, member: GuildMember) {
@@ -36,12 +36,12 @@ async function embedBuilderForLookupUser(serverID: string, member: GuildMember) 
 		.addFields(
 			{ name: "Joined", value: member.joinedAt?.toDateString() ?? "An Unknown Date" },
 			{ name: "Registered", value: member.user.createdAt.toDateString() ?? "An Unknown Date" },
-            { name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" },
-            { name: "Number of Global Bans", value: "This user is clean (WIP)", inline: true },
-            { name: "Number of Global Warns", value: "This user is clean (WIP)", inline: true },
-            { name: "Number of Global Notes", value: "This user is clean (WIP)", inline: true }
+			{ name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" },
+			{ name: "Number of Global Bans", value: "This user is clean (WIP)", inline: true },
+			{ name: "Number of Global Warns", value: "This user is clean (WIP)", inline: true },
+			{ name: "Number of Global Notes", value: "This user is clean (WIP)", inline: true }
 		)
-        .setTimestamp()
+		.setTimestamp()
 }
 
 // I think its better that i make it one line but i will see
