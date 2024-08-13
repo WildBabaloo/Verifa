@@ -36,10 +36,10 @@ async function embedBuilderForLookupUser(serverID: string, member: GuildMember) 
 		.addFields(
 			{ name: "Joined", value: member.joinedAt?.toDateString() ?? "An Unknown Date" },
 			{ name: "Registered", value: member.user.createdAt.toDateString() ?? "An Unknown Date" },
-            		{ name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" },
-            		{ name: "Number of Global Bans", value: "This user is clean (WIP)", inline: true },
-            		{ name: "Number of Global Warns", value: "This user is clean (WIP)", inline: true },
-            		{ name: "Number of Global Notes", value: "This user is clean (WIP)", inline: true }
+            { name: "Under Lockdown?", value: await checkIfUserIsUnderLockdownInThatServer(serverID, member) ? "✅" : "❌" },
+            { name: "Number of Global Bans", value: "This user is clean (WIP)", inline: true },
+            { name: "Number of Global Warns", value: "This user is clean (WIP)", inline: true },
+            { name: "Number of Global Notes", value: "This user is clean (WIP)", inline: true }
 		)
         .setTimestamp()
 }
