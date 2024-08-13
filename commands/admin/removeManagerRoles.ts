@@ -35,6 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
         
         await removeManagerRoleFromTheDatabase(role, serverID, serverName);
+        await interaction.reply(`The role <@&${role.id}> is no longer a manager in the server`);
     } catch (error) {
         await interaction.reply("Error with removing the role from our database.");
         return;
