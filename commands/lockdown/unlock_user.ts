@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
-import { checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './lockdown_user';
+import { isAdmin, checkIfUserHasOneOfTheAccessRoles, checkIfUserHasOneOfTheManagerRoles, checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './lockdown_user';
 
 export const data = new SlashCommandBuilder()
 	.setName("unlock")
@@ -11,6 +11,19 @@ export const data = new SlashCommandBuilder()
 		.setRequired(true));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+	const serverID = interaction.guild?.id as string;
+	const serverName = interaction.guild?.name as string;
+	const moderator = interaction.user.id;
+	const commandAuthor = interaction.member as GuildMember;
+	const memberCommandAuthor = await interaction.guild?.members.fetch(commandAuthor.id) as GuildMember;
+	const userHasManagerRoles = await checkIfUserHasOneOfTheManagerRoles(memberCommandAuthor, serverID);
+	const userHasLockdownAccessRoles = await checkIfUserHasOneOfTheAccessRoles(memberCommandAuthor, serverID);
+	console.log(userHasLockdownAccessRoles);
+	if (!isAdmin(commandAuthor) && !userHasLockdownAccessRoles && !userHasManagerRoles) {
+		await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+		return;
+	}
+	
 	const user = interaction.options.getUser("user");
 	if (!user) {
 		await interaction.reply({ content: "Error! The user is invalid", ephemeral: true });
@@ -24,9 +37,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
 
-	const serverID = interaction.guild?.id as string;
-	const serverName = interaction.guild?.name as string;
-	const moderator = interaction.user.id;
 	const userAvatar = user.avatarURL();
 	const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
 	if (!alreadyLockdowned) {
