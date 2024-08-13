@@ -6,21 +6,21 @@ const userSchema = new Schema({
     userLogs: {
         globalBans: {
             server: {
-                serverID: [String], 
+                serverID: [String],
                 serverName: [String],
                 reason: [String]
             }
         },
         activeLockdowns: {
             server: {
-                serverID: [String], 
+                serverID: [String],
                 serverName: [String],
                 reason: [String]
             }
         },
         notes: {
             server: {
-                serverID: [String], 
+                serverID: [String],
                 serverName: [String],
                 reason: [String]
             }

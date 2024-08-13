@@ -4,6 +4,7 @@ const serverSchema = new Schema({
     id: String,
     name: String,
     serverConfig: {
+        managerRoleIDs: [String],
         lockdownConfig: {
             lockdownRoleID: String,
             lockdownLogChannel: String,

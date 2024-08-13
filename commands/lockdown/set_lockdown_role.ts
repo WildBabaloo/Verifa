@@ -2,11 +2,11 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, Role, type APIRole, P
 import { Servers } from '../../database/schemas/servers';
 
 export const data = new SlashCommandBuilder()
-	.setName('set_lockdown_role')
-	.setDescription('Sets the role given when the user is in lockdown mode')
+    .setName('set_lockdown_role')
+    .setDescription('Sets the role given when the user is in lockdown mode')
     .addRoleOption(option => option.setName("role")
-                        .setDescription("Enter the role")
-                        .setRequired(true))
+        .setDescription("Enter the role")
+        .setRequired(true))
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const role = interaction.options.getRole("role");
     if (!role || !isRole(role)) {
-        await interaction.reply({content: "This is not a valid role", ephemeral: true});
+        await interaction.reply({ content: "This is not a valid role", ephemeral: true });
         return;
     }
 
@@ -39,14 +39,14 @@ export function isRole(role: Role | APIRole): role is Role {
 
 async function addRoleToDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        let server = await Servers.findOne({id: serverID})
+        let server = await Servers.findOne({ id: serverID })
         if (!server) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
             server = makeNewServerDocumentWithRole(role, serverID, serverName);
             await server.save();
             console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database`);
         } else {
-            await Servers.findOneAndUpdate({id: serverID}, {$set: {"serverConfig.lockdownConfig.lockdownRoleID": role.id}});
+            await Servers.findOneAndUpdate({ id: serverID }, { $set: { "serverConfig.lockdownConfig.lockdownRoleID": role.id } });
             console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been updated`);
         }
     } catch (error) {
@@ -60,6 +60,7 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
         id: serverID,
         name: serverName,
         serverConfig: {
+            managerRoleIDs: [],
             lockdownConfig: {
                 lockdownRoleID: role.id,
                 lockdownLogChannel: null,

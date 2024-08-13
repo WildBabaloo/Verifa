@@ -1,10 +1,10 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, Role, PermissionsBitField, GuildMember } from 'discord.js';
-import { isRole } from './set_lockdown_role';
 import { Servers } from '../../database/schemas/servers';
+import { isRole } from '../lockdown/set_lockdown_role';
 
 export const data = new SlashCommandBuilder()
-    .setName('set_lockdown_access_role')
-    .setDescription('Add a role that will have access to the lockdown commands.')
+    .setName('addManagerRole')
+    .setDescription('Add a role to the list of server managers/moderators')
     .addRoleOption(option => option.setName("role")
         .setDescription("Enter the role")
         .setRequired(true))
@@ -26,39 +26,40 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const serverID = interaction.guild?.id as string;
     const serverName = interaction.guild?.name as string;
     try {
-        const isAccessRoleInServerSchema = await checkIfAccessRoleIsAlreadyInTheServerSchema(role, serverID);
-        if (isAccessRoleInServerSchema) {
-            await interaction.reply({ content: `<@&${role.id}> already has access to the lockdown commands`, ephemeral: true });
+        const isManagerRoleInServerSchema = await checkIfManagerRoleIsAlreadyInTheServerSchema(role, serverID);
+        if (isManagerRoleInServerSchema) {
+            await interaction.reply({ content: `<@&${role.id}> is already part of the manager roles`, ephemeral: true })
             return;
         }
-        await addAccessRoleToTheDatabase(role, serverID, serverName);
-        await interaction.reply(`The role <@&${role.id}> has been been added. People with this role can now use the lockdown commands`);
+        await addManagerRoleToTheDatabase(role, serverID, serverName);
+        await interaction.reply(`The role <@&${role.id}> has been been added to list of of managers in the server`);
     } catch (error) {
+        console.log(`Error with adding ${role.id} onto the database for this server ${serverName} (ID: ${serverID})`, error);
         await interaction.reply("Error with adding the role onto our database.");
         return;
     }
 }
 
-export async function checkIfAccessRoleIsAlreadyInTheServerSchema(role: Role, serverID: string) {
+export async function checkIfManagerRoleIsAlreadyInTheServerSchema(role: Role, serverID: string) {
     const theServer = await Servers.findOne({ id: serverID });
     if (theServer) {
-        return theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess.includes(role.id);
+        return theServer.serverConfig?.managerRoleIDs.includes(role.id);
     }
 
     return false;
 }
 
-async function addAccessRoleToTheDatabase(role: Role, serverID: string, serverName: string) {
+async function addManagerRoleToTheDatabase(role: Role, serverID: string, serverName: string) {
     try {
-        let server = await Servers.findOne({ id: serverID })
-        if (!server) {
+        let theServer = await Servers.findOne({ id: serverID });
+        if (!theServer) {
             console.log(`Server ${serverName} (id: ${serverID}) was not found in the database adding it now...`);
-            server = makeNewServerDocumentWithAccessRole(role, serverID, serverName);
-            await server.save();
-            console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database as a new role that has access to lockdown commands`);
+            theServer = makeNewServerDocumentWithManagerRole(role, serverID, serverName);
+            await theServer.save();
+            console.log(`The ${role.name} (id: ${role.id}) role for the server called ${serverName} has been saved to the database as a new role that is now part of the list of managers for that server`);
         } else {
-            await Servers.findOneAndUpdate({ id: serverID }, { $push: { "serverConfig.lockdownConfig.lockdownRoleAccess": role.id } });
-            console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has been added to the access roles for the lockdown commands`);
+            await Servers.findOneAndUpdate({ id: serverID }, { $push: { "serverConfig.managerRoleIDs": role.id } });
+            console.log(`Server ${serverName} (id: ${serverID}) was found and its role ${role.name} (id: ${role.id}) has now been added to the list of managers`);
         }
     } catch (error) {
         console.error(`Could not save the server ${serverID} under the name ${serverName} and/or role ${role.id} to the database`, error);
@@ -66,17 +67,17 @@ async function addAccessRoleToTheDatabase(role: Role, serverID: string, serverNa
     }
 }
 
-function makeNewServerDocumentWithAccessRole(role: Role, serverID: string, serverName: string) {
+function makeNewServerDocumentWithManagerRole(role: Role, serverID: string, serverName: string) {
     return new Servers({
         id: serverID,
         name: serverName,
         serverConfig: {
-            managerRoleIDs: [],
+            managerRoleIDs: [role.id],
             lockdownConfig: {
                 lockdownRoleID: null,
                 lockdownLogChannel: null,
-                lockdownRoleAccess: [role.id],
-                reason: "You are sus", // To make it custom later on
+                lockdownRoleAccess: [],
+                reason: null
             }
         },
         loggedMembers: {
