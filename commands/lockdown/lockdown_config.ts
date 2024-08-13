@@ -19,8 +19,10 @@ export async function execute(interaction: CommandInteraction) {
 		? `<#${server.serverConfig.lockdownConfig.lockdownLogChannel}>`
 		: "This value has not been set";
 	const lockdownRoleAccessIDs = server?.serverConfig?.lockdownConfig?.lockdownRoleAccess ?? [];
-	const lockdownRoleAccessMentions = lockdownRoleAccessIDs.length > 0 ? lockdownRoleAccessIDs.map((id: string) => `<@&${id}>`).join(", ") : "No additional roles has been added yet.";
-	void interaction.reply({ embeds: [embedBuilder(lockdownRoleID, lockdownLogChannelID, lockdownRoleAccessMentions)] })
+	const lockdownManagerRoleIDs = server.serverConfig?.managerRoleIDs ?? [];
+	const combinedLockdownRoleAccessIDs = lockdownManagerRoleIDs.concat(lockdownRoleAccessIDs);
+	const combinedLockdownAccessMentions = lockdownRoleAccessIDs.length > 0 && lockdownManagerRoleIDs.length > 0 ? combinedLockdownRoleAccessIDs.map((id: string) => `<@&${id}>`).join(", ") : "No additional access roles have been configured yet. Only admins currently have access.";
+	void interaction.reply({ embeds: [embedBuilder(lockdownRoleID, lockdownLogChannelID, combinedLockdownAccessMentions)] })
 }
 
 function embedBuilder(lockdownRoleID: string, lockdownLogChannelID: string, lockdownRoleAccessMentions: string): EmbedBuilder {
