@@ -3,7 +3,7 @@ import { Servers } from '../../database/schemas/servers';
 import { isRole } from '../lockdown/set_lockdown_role';
 
 export const data = new SlashCommandBuilder()
-    .setName('addManagerRole')
+    .setName('add_manager_role')
     .setDescription('Add a role to the list of server managers/moderators')
     .addRoleOption(option => option.setName("role")
         .setDescription("Enter the role")
