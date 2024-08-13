@@ -4,8 +4,8 @@ import { isRole } from '../lockdown/set_lockdown_role';
 import { checkIfManagerRoleIsAlreadyInTheServerSchema } from './addManagerRoles';
 
 export const data = new SlashCommandBuilder()
-    .setName('remove_lockdown_access_role')
-    .setDescription('Remove a role that currently has access to the lockdown commands.')
+    .setName('remove_manager_role')
+    .setDescription('Remove a role that currently is a manager in the server')
     .addRoleOption(option => option.setName("role")
         .setDescription("Enter the role")
         .setRequired(true))
