@@ -16,9 +16,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		const moderator = interaction.user.id;
 		const commandAuthor = interaction.member as GuildMember;
 		const memberCommandAuthor = await interaction.guild?.members.fetch(commandAuthor.id) as GuildMember;
+		const userHasManagerRoles = await checkIfUserHasOneOfTheManagerRoles(memberCommandAuthor, serverID);
 		const userHasLockdownAccessRoles = await checkIfUserHasOneOfTheAccessRoles(memberCommandAuthor, serverID);
 		console.log(userHasLockdownAccessRoles);
-		if (!isAdmin(commandAuthor) && !userHasLockdownAccessRoles) {
+		if (!isAdmin(commandAuthor) && !userHasLockdownAccessRoles && !userHasManagerRoles) {
 			await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
 			return;
 		}
@@ -73,6 +74,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 }
 
+export async function checkIfUserHasOneOfTheManagerRoles(member: GuildMember, serverID: string) {
+	const memberRoles = member.roles.cache.map(role => role.id);
+	const theServer = await Servers.findOne({ id: serverID });
+	const theServerManagerRoles = theServer?.serverConfig?.managerRoleIDs;
+	return theServerManagerRoles ? theServerManagerRoles.some(managerRole => memberRoles.includes(managerRole)) : false;
+}
+
 export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, serverID: string): Promise<boolean> {
 	const memberRoles = member.roles.cache.map(role => role.id);
 	const theServer = await Servers.findOne({ id: serverID });
@@ -89,7 +97,7 @@ export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, u
 	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
 }
 
-function isAdmin(member: GuildMember): boolean {
+export function isAdmin(member: GuildMember): boolean {
 	return member.permissions.has(PermissionsBitField.Flags.Administrator);
 }
 
