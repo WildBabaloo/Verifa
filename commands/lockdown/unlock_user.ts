@@ -24,10 +24,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
 	
-	const user = interaction.options.getUser("user");
+	const user = interaction.options.getUser("user") as User;
 	if (!user) {
 		await interaction.reply({ content: "Error! The user is invalid", ephemeral: true });
 		return;
+	}
+
+	const member = await interaction.guild?.members.fetch(user) as GuildMember;
+	if (!member) {
+		await interaction.reply({ content: "Error! Please select a user that is in the current server.", ephemeral: true });
 	}
 
 	const currentChannel = interaction.channel;
@@ -37,10 +42,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
 
-	const userAvatar = user.avatarURL();
-	const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
+	const userAvatar = member.user.avatarURL();
+	const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
 	if (!alreadyLockdowned) {
-		await interaction.reply(`${user.id} is currently not under lockdown`);
+		await interaction.reply(`${member.user.id} is currently not under lockdown`);
 		return;
 	}
 
@@ -51,17 +56,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 
 	try {
-		const member = await interaction.guild?.members.fetch(user.id) as GuildMember;
 		await member.roles.remove(lockdownRoleID);
-		await removeServerFromTheUserSchema(user, serverID, serverName);
-		await removeUserFromTheServerSchema(user, serverID);
-		await interaction.reply(`<@${user.id}> has been removed from their lockdown state`);
+		await removeServerFromTheUserSchema(member, serverID, serverName);
+		await removeUserFromTheServerSchema(member, serverID);
+		await interaction.reply(`<@${member.user.id}> has been removed from their lockdown state`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyAreNoLongerUnderLockdown(serverID, serverName)] })
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
 			if (logChannel) {
-				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(user.id, user.username, userAvatar, moderator)] });
+				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(member.user.id, member.user.username, userAvatar, moderator)] });
 			} else {
 				void currentChannel.send("Log channel was not found. The channel was either deleted or the bot has no longer has permissions to it");
 			}
@@ -74,22 +78,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 }
 
-async function removeServerFromTheUserSchema(user: User, serverID: string, serverName: string) {
+async function removeServerFromTheUserSchema(member: GuildMember, serverID: string, serverName: string) {
 	try {
-		await Users.findOneAndUpdate({ id: user.id }, { $pull: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName } });
-		console.log(`Updated user schema for ${user.globalName}. They are no longer marked as lockdowned in ${serverName}`);
+		await Users.findOneAndUpdate({ id: member.user.id }, { $pull: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName } });
+		console.log(`Updated user schema for ${member.user.globalName}. They are no longer marked as lockdowned in ${serverName}`);
 	} catch (error) {
-		console.error(`Error removing to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
+		console.error(`Error removing to the database for user: ${member.user.globalName} (ID: ${member.user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
 		throw error;
 	}
 }
 
-async function removeUserFromTheServerSchema(user: User, serverID: string) {
+async function removeUserFromTheServerSchema(member: GuildMember, serverID: string) {
 	try {
-		await Servers.findOneAndUpdate({ id: serverID }, { $pull: { "loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName } });
-		console.log(`Updated server schema for ${serverID}. User ${user.id} is no longer marked as lockdowned`);
+		await Servers.findOneAndUpdate({ id: serverID }, { $pull: { "loggedMembers.lockdownedMembers.userID": member.user.id, "loggedMembers.lockdownedMembers.username": member.user.globalName } });
+		console.log(`Updated server schema for ${serverID}. User ${member.user.id} is no longer marked as lockdowned`);
 	} catch (error) {
-		console.error(`Error removing to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID}`, error);
+		console.error(`Error removing to the database for user: ${member.user.globalName} (ID: ${member.user.id}), serverID: ${serverID}`, error);
 		throw error;
 	}
 }
