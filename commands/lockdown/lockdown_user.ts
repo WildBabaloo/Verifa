@@ -24,10 +24,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 			return;
 		}
 
-		const user = interaction.options.getUser("user");
+		const user = interaction.options.getUser("user") as User;
 		if (!user) {
-			await interaction.reply({ content: "Error! The user is invalid", ephemeral: true });
+			await interaction.reply({ content: "Error! The user is invalid.", ephemeral: true });
 			return;
+		}
+
+		const member = await interaction.guild?.members.fetch(user) as GuildMember;
+		if (!member) {
+			await interaction.reply({ content: "Error! Please select a user that is in the current server.", ephemeral: true });
 		}
 
 		const currentChannel = interaction.channel;
@@ -37,9 +42,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 			return;
 		}
 
-		const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, user);
+		const alreadyLockdowned = await checkIfUserIsUnderLockdownInThatServer(serverID, member);
 		if (alreadyLockdowned) {
-			await interaction.reply(`<@${user.id}> is already under lockdown in this server`);
+			await interaction.reply(`<@${member.user.id}> is already under lockdown in this server`);
 			return;
 		}
 
@@ -50,18 +55,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		}
 
 		// Giving user the lockdown role
-		const userAvatar = user.avatarURL();
-		const toLockdownUser = await interaction.guild?.members.fetch(user.id) as GuildMember;
-		await toLockdownUser.roles.add(lockdownRoleID);
-		await addServerToTheUserSchema(user, serverID, serverName);
-		await addUserToTheServerSchema(user, serverID);
-		await interaction.reply(`<@${user.id}> has been put into lockdown mode`);
+		const userAvatar = member.user.avatarURL();
+		await member.roles.add(lockdownRoleID);
+		await addServerToTheUserSchema(member, serverID, serverName);
+		await addUserToTheServerSchema(member, serverID);
+		await interaction.reply(`<@${member.user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
 		if (logChannelID) {
 			const logChannel = interaction.guild?.channels.cache.get(logChannelID) as TextChannel;
 			if (logChannel) {
-				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(user.id, user.username, userAvatar, moderator)] });
+				await logChannel.send({ embeds: [embedBuilderForLogChannelWhenUserHasBeenLockedDown(member.user.id, member.user.username, userAvatar, moderator)] });
 			} else {
 				void currentChannel.send("Log channel was not found. The channel was either deleted or the bot has no longer has permissions to it");
 			}
@@ -88,8 +92,8 @@ export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, ser
 	return theServerRoleAccess ? theServerRoleAccess.some(roleAccess => memberRoles.includes(roleAccess)) : false;
 }
 
-export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, user: User | GuildMember) {
-	const theUser = await Users.findOne({ id: user.id });
+export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, member: GuildMember) {
+	const theUser = await Users.findOne({ id: member.user.id });
 	if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) {
 		return false; // Nothing found in the DB
 	}
@@ -101,20 +105,20 @@ export function isAdmin(member: GuildMember): boolean {
 	return member.permissions.has(PermissionsBitField.Flags.Administrator);
 }
 
-async function addServerToTheUserSchema(user: User, serverID: string, serverName: string) {
+async function addServerToTheUserSchema(member: GuildMember, serverID: string, serverName: string) {
 	try {
-		let theUser = await Users.findOne({ id: user.id });
+		let theUser = await Users.findOne({ id: member.user.id });
 		if (!theUser) {
-			console.log(`User ${user.globalName} (ID: ${user.id}) was not found in the database. Adding it now...`);
-			theUser = makeNewUserDocumentWithLockdown(user.id, user.globalName as string, serverID, serverName)
+			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) was not found in the database. Adding it now...`);
+			theUser = makeNewUserDocumentWithLockdown(member.user.id, member.user.globalName as string, serverID, serverName)
 			await theUser.save();
-			console.log(`User ${user.globalName} (ID: ${user.id}) has been added to the database`);
+			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) has been added to the database`);
 		} else {
-			await Users.findOneAndUpdate({ id: user.id }, { $push: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus" } });
-			console.log(`Updated user schema for ${user.globalName}. They are now marked as lockdowned in ${serverName}`);
+			await Users.findOneAndUpdate({ id: member.user.id }, { $push: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus" } });
+			console.log(`Updated user schema for ${member.user.globalName}. They are now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
-		console.error(`Error adding to the database for user: ${user.globalName} (ID: ${user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
+		console.error(`Error adding to the database for user: ${member.user.globalName} (ID: ${member.user.id}), serverID: ${serverID} and serverName: ${serverName}`, error);
 		throw error;
 	}
 }
@@ -149,11 +153,11 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 	})
 }
 
-async function addUserToTheServerSchema(user: User, serverID: string) {
+async function addUserToTheServerSchema(member: GuildMember, serverID: string) {
 	try {
-		await Servers.findOneAndUpdate({ id: serverID }, { $set: { "loggedMembers.lockdownedMembers.userID": user.id, "loggedMembers.lockdownedMembers.username": user.globalName } });
+		await Servers.findOneAndUpdate({ id: serverID }, { $set: { "loggedMembers.lockdownedMembers.userID": member.user.id, "loggedMembers.lockdownedMembers.username": member.user.globalName } });
 	} catch (error) {
-		console.error(`Error adding the user ${user.globalName} (ID: ${user.id} onto the server schema with the ID of ${serverID})`, error);
+		console.error(`Error adding the user ${member.user.globalName} (ID: ${member.user.id} onto the server schema with the ID of ${serverID})`, error);
 		throw error;
 	}
 }
