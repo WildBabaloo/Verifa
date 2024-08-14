@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, User, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, EmbedBuilder, TextChannel } from 'discord.js';
 import { Servers } from '../../database/schemas/servers';
 import { Users } from '../../database/schemas/users';
 import { isAdmin, checkIfUserHasOneOfTheAccessRoles, checkIfUserHasOneOfTheManagerRoles, checkIfUserIsUnderLockdownInThatServer, getLockdownRoleIDFromDatabase, getLogChannelIDFromDatabase } from './lockdown_user';
@@ -24,15 +24,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		return;
 	}
 	
-	const user = interaction.options.getUser("user") as User;
+	const user = interaction.options.getUser("user");
 	if (!user) {
-		await interaction.reply({ content: "Error! The user is invalid", ephemeral: true });
+		await interaction.reply({ content: "Error! The user is invalid.", ephemeral: true });
 		return;
 	}
 
-	const member = await interaction.guild?.members.fetch(user) as GuildMember;
+	const member = await interaction.guild?.members.fetch(user.id).catch(() => null);
 	if (!member) {
-		await interaction.reply({ content: "Error! Please select a user that is in the current server.", ephemeral: true });
+		await interaction.reply({ content: "Please select a user that is in the current server.", ephemeral: true });
+		return;
 	}
 
 	const currentChannel = interaction.channel;
