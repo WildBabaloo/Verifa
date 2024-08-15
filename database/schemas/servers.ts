@@ -38,6 +38,7 @@ const serverSchema = new Schema({
             userID: [String],
             username: [String],
             dateAndTime: [String],
+            moderator: [String],
             reason: [String]
         }
     }
