@@ -111,7 +111,8 @@ async function addServerToTheUserSchema(member: GuildMember, serverID: string, s
 		let theUser = await Users.findOne({ id: member.user.id });
 		if (!theUser) {
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) was not found in the database. Adding it now...`);
-			theUser = makeNewUserDocumentWithLockdown(member.user.id, member.user.globalName as string, serverID, serverName)
+			const datetime = new Date().toISOString().slice(0,10);
+			theUser = makeNewUserDocumentWithLockdown(member.user.id, member.user.globalName as string, serverID, serverName, datetime)
 			await theUser.save();
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) has been added to the database`);
 		} else {
@@ -124,7 +125,7 @@ async function addServerToTheUserSchema(member: GuildMember, serverID: string, s
 	}
 }
 
-function makeNewUserDocumentWithLockdown(userId: string, username: string, serverID: string, serverName: string) {
+function makeNewUserDocumentWithLockdown(userId: string, username: string, serverID: string, serverName: string, datetime: string) {
 	return new Users({
 		id: userId,
 		username: username,
@@ -133,6 +134,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 				server: {
 					serverID: [],
 					serverName: [],
+					dateAndTime: [],
 					reason: [],
 				}
 			},
@@ -140,6 +142,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 				server: {
 					serverID: [serverID],
 					serverName: [serverName],
+					dateAndTime: [datetime],
 					reason: ["You are sus"],
 				}
 			},
@@ -147,6 +150,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 				server: {
 					serverID: [],
 					serverName: [],
+					dateAndTime: [],
 					reason: [],
 				}
 			},
