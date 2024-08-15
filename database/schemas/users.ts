@@ -8,6 +8,7 @@ const userSchema = new Schema({
             server: {
                 serverID: [String],
                 serverName: [String],
+                dateAndTime: [String],
                 reason: [String]
             }
         },
@@ -15,6 +16,7 @@ const userSchema = new Schema({
             server: {
                 serverID: [String],
                 serverName: [String],
+                dateAndTime: [String],
                 reason: [String]
             }
         },
@@ -22,6 +24,7 @@ const userSchema = new Schema({
             server: {
                 serverID: [String],
                 serverName: [String],
+                dateAndTime: [String],
                 reason: [String]
             }
         }
