@@ -79,6 +79,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 }
 
+// TODO: REMOVE DATETIME FROM DB
 async function removeServerFromTheUserSchema(member: GuildMember, serverID: string, serverName: string) {
 	try {
 		await Users.findOneAndUpdate({ id: member.user.id }, { $pull: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName } });
@@ -96,6 +97,22 @@ async function removeUserFromTheServerSchema(member: GuildMember, serverID: stri
 	} catch (error) {
 		console.error(`Error removing to the database for user: ${member.user.globalName} (ID: ${member.user.id}), serverID: ${serverID}`, error);
 		throw error;
+	}
+}
+
+async function getLockdownDateTimeFromTheDatabase(userID: string, serverID: string, isUserSchema: boolean) {
+	if (isUserSchema) {
+		const theUser = await Users.findOne({ id: userID });
+		if (!theUser || !theUser.userLogs || !theUser.userLogs.activeLockdowns || !theUser.userLogs.activeLockdowns.server) { return null }
+		const positionServer = theUser.userLogs.activeLockdowns.server.serverID.indexOf(serverID);
+		const dateTime = theUser.userLogs.activeLockdowns.server.dateAndTime[positionServer];
+		return dateTime;
+	} else {
+		const theServer = await Servers.findOne({ id: serverID });
+		if (!theServer || !theServer.loggedMembers || !theServer.loggedMembers.lockdownedMembers) { return null }
+		const positionUser = theServer.loggedMembers.lockdownedMembers.userID.indexOf(userID);
+		const dateTime = theServer.loggedMembers.lockdownedMembers.dateAndTime[positionUser];
+		return dateTime;
 	}
 }
 
