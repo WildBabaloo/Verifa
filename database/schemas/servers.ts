@@ -13,34 +13,42 @@ const serverSchema = new Schema({
         }
     },
     loggedMembers: {
-        globalBannedMembers: {
-            userID: [String],
-            username: [String],
-            dateAndTime: [String],
-            moderator: [String],
-            reason: [String]
-        },
-        lockdownedMembers: {
-            userID: [String],
-            username: [String],
-            dateAndTime: [String],
-            moderator: [String],
-            reason: [String]
-        },
-        warnedMembers: {
-            userID: [String],
-            username: [String],
-            dateAndTime: [String],
-            moderator: [String],
-            reason: [String]
-        },
-        notedMembers: {
-            userID: [String],
-            username: [String],
-            dateAndTime: [String],
-            moderator: [String],
-            reason: [String]
-        }
+        globalBannedMembers: [
+            {
+                userID: String,
+                username: String,
+                dateAndTime: String,
+                moderator: String,
+                reason: String
+            }
+        ],
+        lockdownedMembers: [
+            {
+                userID: String,
+                username: String,
+                dateAndTime: String,
+                moderator: String,
+                reason: String
+            }
+        ],
+        warnedMembers: [
+            {
+                userID: String,
+                username: String,
+                dateAndTime: String,
+                moderator: String,
+                reason: String
+            }
+        ],
+        notedMembers: [
+            {
+                userID: String,
+                username: String,
+                dateAndTime: String,
+                moderator: String,
+                reason: String
+            }
+        ]
     }
 });
 
