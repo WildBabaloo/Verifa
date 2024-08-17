@@ -56,9 +56,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 		// Giving user the lockdown role
 		const userAvatar = member.user.avatarURL();
+		const datetime = new Date().toISOString();
 		await member.roles.add(lockdownRoleID);
-		await addServerToTheUserSchema(member, serverID, serverName);
-		await addUserToTheServerSchema(member, serverID);
+		await addServerToTheUserSchema(member, serverID, serverName, datetime);
+		await addUserToTheServerSchema(member, serverID, datetime);
 		await interaction.reply(`<@${member.user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
@@ -106,17 +107,16 @@ export function isAdmin(member: GuildMember): boolean {
 	return member.permissions.has(PermissionsBitField.Flags.Administrator);
 }
 
-async function addServerToTheUserSchema(member: GuildMember, serverID: string, serverName: string) {
+async function addServerToTheUserSchema(member: GuildMember, serverID: string, serverName: string, datetime: string) {
 	try {
 		let theUser = await Users.findOne({ id: member.user.id });
 		if (!theUser) {
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) was not found in the database. Adding it now...`);
-			const datetime = new Date().toISOString().slice(0,10);
 			theUser = makeNewUserDocumentWithLockdown(member.user.id, member.user.globalName as string, serverID, serverName, datetime)
 			await theUser.save();
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) has been added to the database`);
 		} else {
-			await Users.findOneAndUpdate({ id: member.user.id }, { $push: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus" } });
+			await Users.findOneAndUpdate({ id: member.user.id }, { $push: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus", "loggedMembers.lockdownedMembers.dateAndTime" : datetime } });
 			console.log(`Updated user schema for ${member.user.globalName}. They are now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
@@ -158,9 +158,9 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 	})
 }
 
-async function addUserToTheServerSchema(member: GuildMember, serverID: string) {
+async function addUserToTheServerSchema(member: GuildMember, serverID: string, datetime: string) {
 	try {
-		await Servers.findOneAndUpdate({ id: serverID }, { $set: { "loggedMembers.lockdownedMembers.userID": member.user.id, "loggedMembers.lockdownedMembers.username": member.user.globalName } });
+		await Servers.findOneAndUpdate({ id: serverID }, { $push: { "loggedMembers.lockdownedMembers.userID": member.user.id, "loggedMembers.lockdownedMembers.username": member.user.globalName, "loggedMembers.lockdownedMembers.dateAndTime" : datetime } });
 	} catch (error) {
 		console.error(`Error adding the user ${member.user.globalName} (ID: ${member.user.id} onto the server schema with the ID of ${serverID})`, error);
 		throw error;
