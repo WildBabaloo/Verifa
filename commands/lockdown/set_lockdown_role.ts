@@ -69,26 +69,10 @@ function makeNewServerDocumentWithRole(role: Role, serverID: string, serverName:
             }
         },
         loggedMembers: {
-            globalBannedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            lockdownedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            warnedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            notedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            }
+            globalBannedMembers: [],
+            lockdownedMembers: [],
+            warnedMembers: [],
+            notedMembers: [],
         }
     });
 }

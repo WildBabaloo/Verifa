@@ -66,26 +66,10 @@ function makeNewServerDocumentWithChannel(channel: TextChannel, serverID: string
             }
         },
         loggedMembers: {
-            globalBannedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            lockdownedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            warnedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            },
-            notedMembers: {
-                userID: [],
-                username: [],
-                reason: [],
-            }
+            globalBannedMembers: [],
+            lockdownedMembers: [],
+            warnedMembers: [],
+            notedMembers: [],
         }
     });
 }
