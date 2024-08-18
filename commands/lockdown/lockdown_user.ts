@@ -87,7 +87,7 @@ export async function checkIfUserHasOneOfTheManagerRoles(member: GuildMember, se
 	return theServerManagerRoles ? theServerManagerRoles.some(managerRole => memberRoles.includes(managerRole)) : false;
 }
 
-export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, serverID: string): Promise<boolean> {
+export async function checkIfUserHasOneOfTheAccessRoles(member: GuildMember, serverID: string) {
 	const memberRoles = member.roles.cache.map(role => role.id);
 	const theServer = await Servers.findOne({ id: serverID });
 	const theServerRoleAccess = theServer?.serverConfig?.lockdownConfig?.lockdownRoleAccess;
@@ -100,7 +100,7 @@ export async function checkIfUserIsUnderLockdownInThatServer(serverID: string, m
 		return false; // Nothing found in the DB
 	}
 
-	return theUser.userLogs.activeLockdowns.server.serverID.includes(serverID);
+	return theUser.userLogs.activeLockdowns.server.some((lockdown) => lockdown.serverID === serverID);
 }
 
 export function isAdmin(member: GuildMember): boolean {
@@ -116,7 +116,19 @@ async function addServerToTheUserSchema(member: GuildMember, serverID: string, s
 			await theUser.save();
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) has been added to the database`);
 		} else {
-			await Users.findOneAndUpdate({ id: member.user.id }, { $push: { "userLogs.activeLockdowns.server.serverID": serverID, "userLogs.activeLockdowns.server.serverName": serverName, "userLogs.activeLockdowns.server.reason": "You are sus", "loggedMembers.lockdownedMembers.dateAndTime" : datetime } });
+			await Users.findOneAndUpdate(
+				{ id: member.user.id }, 
+				{ 
+					$push: { 
+						"userLogs.activeLockdowns.server": {
+							serverID: serverID,
+							serverName: serverName,
+							dateAndTime: datetime,
+							reason: "You are sus", 
+						} 
+					} 
+				}
+			);
 			console.log(`Updated user schema for ${member.user.globalName}. They are now marked as lockdowned in ${serverName}`);
 		}
 	} catch (error) {
@@ -131,28 +143,18 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 		username: username,
 		userLogs: {
 			globalBans: {
-				server: {
-					serverID: [],
-					serverName: [],
-					dateAndTime: [],
-					reason: [],
-				}
+				server: [{}],
 			},
 			activeLockdowns: {
-				server: {
-					serverID: [serverID],
-					serverName: [serverName],
-					dateAndTime: [datetime],
-					reason: ["You are sus"],
-				}
+				server: [{
+					serverID: serverID,
+					serverName: serverName,
+					dateAndTime: datetime,
+					reason: "You are sus",
+				}],
 			},
 			notes: {
-				server: {
-					serverID: [],
-					serverName: [],
-					dateAndTime: [],
-					reason: [],
-				}
+				server: [{}],
 			},
 		}
 	})
