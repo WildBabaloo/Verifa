@@ -117,16 +117,16 @@ async function addServerToTheUserSchema(member: GuildMember, serverID: string, s
 			console.log(`User ${member.user.globalName} (ID: ${member.user.id}) has been added to the database`);
 		} else {
 			await Users.findOneAndUpdate(
-				{ id: member.user.id }, 
-				{ 
-					$push: { 
+				{ id: member.user.id },
+				{
+					$push: {
 						"userLogs.activeLockdowns.server": {
 							serverID: serverID,
 							serverName: serverName,
 							dateAndTime: datetime,
-							reason: "You are sus", 
-						} 
-					} 
+							reason: "You are sus",
+						}
+					}
 				}
 			);
 			console.log(`Updated user schema for ${member.user.globalName}. They are now marked as lockdowned in ${serverName}`);
@@ -143,7 +143,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 		username: username,
 		userLogs: {
 			globalBans: {
-				server: [{}],
+				server: [],
 			},
 			activeLockdowns: {
 				server: [{
@@ -154,7 +154,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 				}],
 			},
 			notes: {
-				server: [{}],
+				server: [],
 			},
 		}
 	})
@@ -162,7 +162,20 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 
 async function addUserToTheServerSchema(member: GuildMember, serverID: string, datetime: string) {
 	try {
-		await Servers.findOneAndUpdate({ id: serverID }, { $push: { "loggedMembers.lockdownedMembers.userID": member.user.id, "loggedMembers.lockdownedMembers.username": member.user.globalName, "loggedMembers.lockdownedMembers.dateAndTime" : datetime } });
+		await Servers.findOneAndUpdate(
+			{ id: serverID },
+			{
+				$push: {
+					"loggedMembers.lockdownedMembers": {
+						userID: member.user.id,
+						username: member.user.globalName,
+						dateAndTime: datetime,
+						moderator: "A moderator",
+						reason: "You are sus"
+					}
+				}
+			}
+		);
 	} catch (error) {
 		console.error(`Error adding the user ${member.user.globalName} (ID: ${member.user.id} onto the server schema with the ID of ${serverID})`, error);
 		throw error;
