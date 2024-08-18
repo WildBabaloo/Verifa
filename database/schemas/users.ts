@@ -7,8 +7,8 @@ const userSchema = new Schema({
         globalBans: {
             server: [
                 {
-                    userID: String,
-                    username: String,
+                    serverID: String,
+                    serverName: String,
                     dateAndTime: String,
                     reason: String
                 }
@@ -17,8 +17,8 @@ const userSchema = new Schema({
         activeLockdowns: {
             server: [
                 {
-                    userID: String,
-                    username: String,
+                    serverID: String,
+                    serverName: String,
                     dateAndTime: String,
                     reason: String
                 }
@@ -27,8 +27,8 @@ const userSchema = new Schema({
         notes: {
             server: [
                 {
-                    userID: String,
-                    username: String,
+                    serverID: String,
+                    serverName: String,
                     dateAndTime: String,
                     reason: String
                 }
