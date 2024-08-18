@@ -81,34 +81,10 @@ function makeNewServerDocumentWithManagerRole(role: Role, serverID: string, serv
             }
         },
         loggedMembers: {
-            globalBannedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            lockdownedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            warnedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            notedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            }
+            globalBannedMembers: [],
+            lockdownedMembers: [],
+            warnedMembers: [],
+            notedMembers: [],
         }
     });
 }

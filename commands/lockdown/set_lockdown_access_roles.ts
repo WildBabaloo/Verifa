@@ -80,34 +80,10 @@ function makeNewServerDocumentWithAccessRole(role: Role, serverID: string, serve
             }
         },
         loggedMembers: {
-            globalBannedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            lockdownedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            warnedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            },
-            notedMembers: {
-                userID: [],
-                username: [],
-                dateAndTime: [],
-                moderator: [],
-                reason: [],
-            }
+            globalBannedMembers: [],
+            lockdownedMembers: [],
+            warnedMembers: [],
+            notedMembers: [],
         }
     });
 }
