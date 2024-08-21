@@ -59,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		const datetime = new Date().toISOString();
 		await member.roles.add(lockdownRoleID);
 		await addServerToTheUserSchema(member, serverID, serverName, datetime);
-		await addUserToTheServerSchema(member, serverID, datetime);
+		await addUserToTheServerSchema(member, serverID, datetime, commandAuthor.id);
 		await interaction.reply(`<@${member.user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
@@ -160,7 +160,7 @@ function makeNewUserDocumentWithLockdown(userId: string, username: string, serve
 	})
 }
 
-async function addUserToTheServerSchema(member: GuildMember, serverID: string, datetime: string) {
+async function addUserToTheServerSchema(member: GuildMember, serverID: string, datetime: string, moderatorID: string) {
 	try {
 		await Servers.findOneAndUpdate(
 			{ id: serverID },
@@ -170,7 +170,7 @@ async function addUserToTheServerSchema(member: GuildMember, serverID: string, d
 						userID: member.user.id,
 						username: member.user.globalName,
 						dateAndTime: datetime,
-						moderator: "A moderator",
+						moderator: moderatorID,
 						reason: "You are sus"
 					}
 				}
