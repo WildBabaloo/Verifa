@@ -30,11 +30,12 @@ async function grabAllLockdownUsersIDFromTheDatabase(serverID: string) {
 
 function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[], lockdownMembersDateTime: string[], lockdownMemebersModerators: string[] ) {
     return new EmbedBuilder()
+        .setColor(0xFFE900)
         .setTitle("List of all the current lockdowned members in the server")
         .addFields(
-            { name: "Users", value: lockdownedMembersIDs.map(id => `<@${id}>`).join("\n ------------ \n"), inline: true },
-            { name: "Dates", value: lockdownMembersDateTime.join("\n --------------------------- \n"), inline: true },
-            { name: "Moderators", value: lockdownMemebersModerators.map(id => `<@${id}>`).join("\n ------------ \n"), inline: true },
+            { name: "Users", value: lockdownedMembersIDs.map((id, index) => `${index + 1}. <@${id}>`).join("\n"), inline: true },
+            { name: "Dates", value: lockdownMembersDateTime.map((datetime, index) => `${index + 1}. ${datetime}`).join("\n"), inline: true },
+            { name: "Moderators", value: lockdownMemebersModerators.map((id, index) => `${index + 1}. <@${id}>`).join("\n"), inline: true },
         )
         .setTimestamp()
 }
