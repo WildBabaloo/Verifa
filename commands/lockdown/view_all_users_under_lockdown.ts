@@ -13,16 +13,14 @@ export async function execute(interaction: CommandInteraction) {
         return;
     }
     const lockdownedMembersIDs = lockdownedMembers.map(member => member.userID) as string[];
-    const lockdownedMembersUsernames = lockdownedMembers.map(member => member.username) as string[];
     const lockdownMembersDateTime = lockdownedMembers.map(member => member.dateAndTime) as string[];
     const lockdownMemebersModerators = lockdownedMembers.map(member => member.moderator) as string[];
-    const lockdownedMembersReasons = lockdownedMembers.map(member => member.reason) as string[];
     // if (lockdownedMembersIDs.length == 0 && lockdownedMembersUsernames.length == 0 && lockdownedMembersReasons.length == 0) {
         // await interaction.reply("There are currently no users under lockdown");
         // return;
     // }
     // await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownedMembersReasons)] });
-    await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownedMembersUsernames, lockdownMembersDateTime, lockdownMemebersModerators, lockdownedMembersReasons)] });
+    await interaction.reply({ embeds: [embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs, lockdownMembersDateTime, lockdownMemebersModerators)] });
 }
 
 async function grabAllLockdownUsersIDFromTheDatabase(serverID: string) {
@@ -30,15 +28,13 @@ async function grabAllLockdownUsersIDFromTheDatabase(serverID: string) {
     return theServer?.loggedMembers?.lockdownedMembers;
 }
 
-function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[], lockdownedMembersUsernames: string[], lockdownMembersDateTime: string[], lockdownMemebersModerators: string[], lockdownedMembersReasons: string[]) {
+function embedBuilderForShowingAllLockdownedUsersInAServer(lockdownedMembersIDs: string[], lockdownMembersDateTime: string[], lockdownMemebersModerators: string[] ) {
     return new EmbedBuilder()
         .setTitle("List of all the current lockdowned members in the server")
         .addFields(
-            { name: "Username", value: lockdownedMembersUsernames.join("\n"), inline: true },
-            { name: "Users", value: lockdownedMembersIDs.map(id => `<@${id}>`).join("\n"), inline: true },
-            { name: "Date", value: lockdownMembersDateTime.join("\n"), inline: true },
-            { name: "Moderator", value: lockdownMemebersModerators.map(id => `<@${id}>`).join("\n"), inline: true },
-            { name: "Reasons", value: lockdownedMembersReasons.join("\n"), inline: true } 
+            { name: "Users", value: lockdownedMembersIDs.map(id => `<@${id}>`).join("\n ------------ \n"), inline: true },
+            { name: "Dates", value: lockdownMembersDateTime.join("\n --------------------------- \n"), inline: true },
+            { name: "Moderators", value: lockdownMemebersModerators.map(id => `<@${id}>`).join("\n ------------ \n"), inline: true },
         )
         .setTimestamp()
 }
