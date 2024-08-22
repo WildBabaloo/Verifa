@@ -56,10 +56,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 		// Giving user the lockdown role
 		const userAvatar = member.user.avatarURL();
-		const datetime = new Date().toISOString();
+		const datetime = new Date();
+		const formattedDate = datetime.toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "long",
+			day: "numeric"
+		});
+		const formattedTime = datetime.toLocaleTimeString("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit"
+		});
+		const formattedDateTime = formattedDate + " at " + formattedTime;
 		await member.roles.add(lockdownRoleID);
-		await addServerToTheUserSchema(member, serverID, serverName, datetime);
-		await addUserToTheServerSchema(member, serverID, datetime, commandAuthor.id);
+		await addServerToTheUserSchema(member, serverID, serverName, formattedDateTime);
+		await addUserToTheServerSchema(member, serverID, formattedDateTime, commandAuthor.id);
 		await interaction.reply(`<@${member.user.id}> has been put into lockdown mode`);
 		await user.send({ embeds: [embedBuilderToDMUserThatTheyHaveBeenLockedDown(serverID, serverName)] });
 		const logChannelID = await getLogChannelIDFromDatabase(serverID);
